@@ -1,0 +1,8 @@
+# Override SOLO para desarrollo local:
+#   docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
+# Publica el puerto 3000 en el host. No usar en produccion (ahi el proxy
+# entra al contenedor por la red interna, sin exponer puertos).
+services:
+  app:
+    ports:
+      - "3000:3000"

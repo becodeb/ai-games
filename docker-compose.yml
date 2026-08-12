@@ -13,8 +13,8 @@ services:
       CLIENT_DIST: /app/client/dist
     volumes:
       - steamlab-data:/data
-    ports:
-      - "3000:3000"
+    expose:
+      - "3000"
     healthcheck:
       test:
         - CMD

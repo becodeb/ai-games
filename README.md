@@ -48,17 +48,24 @@ npm run build && npm start
 
 ## Docker
 
+Uso local (publica el puerto 3000 en tu maquina):
+
 ```bash
-docker compose up --build -d
+docker compose -f docker-compose.yml -f docker-compose.local.yml up --build -d
 ```
 
 Queda en http://localhost:3000. Los datos viven en el volumen `steamlab-data` montado en `/data`.
 
+**Importante:** `docker-compose.yml` (el que usa produccion) NO publica puertos en el host.
+Solo el override `docker-compose.local.yml` agrega `3000:3000` para desarrollo local.
+
 ## Deploy en Coolify
 
 1. En Coolify: **New Resource → Docker Compose** (o **Public Repository** si conectas el repo de Git).
-2. Repositorio: el de este proyecto. Branch: `main`. Compose file: `docker-compose.yml`.
-3. Coolify detecta el servicio `app` y el puerto **3000**. Asigna el dominio a ese puerto.
+2. Repositorio: el de este proyecto. Branch: `main`. Compose file: `docker-compose.yml` (sin el override local).
+3. El servicio `app` escucha en el puerto **3000** dentro del contenedor, pero no se publica
+   en el host: el proxy de Coolify (Traefik) entra por la red interna de Docker. En el campo
+   **Ports Exposes** pone `3000` si no lo detecta solo, y asigna el dominio a ese puerto.
 4. Variables de entorno: no hace falta tocar nada; los valores por defecto ya estan en el compose.
    Si queres cambiarlos, copia `.env.example`.
 5. **Importante:** dejar declarado el volumen `steamlab-data → /data` para no perder los juegos en cada deploy.
