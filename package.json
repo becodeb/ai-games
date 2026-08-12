@@ -1,0 +1,21 @@
+{
+  "name": "ia-steamlab",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Taller escolar de creacion de videojuegos con IA: vista de alumno, dashboard de profesor y galeria publica.",
+  "type": "module",
+  "scripts": {
+    "setup": "npm install --prefix server && npm install --prefix client",
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --prefix server run dev",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "start": "npm --prefix server start"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

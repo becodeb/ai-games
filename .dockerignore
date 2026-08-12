@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/data
+**/*.db
+**/*.db-shm
+**/*.db-wal
+.git
+.gitignore
+.env
+.env.local
+prompt_mvp.md
+npm-debug.log*
+.DS_Store
+Thumbs.db
