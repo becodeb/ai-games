@@ -123,6 +123,8 @@ export default function StudentProject() {
   const last = iterations[iterations.length - 1]
   const status = statusInfo(PROJECT_STATUS, project.status)
   const lastError = last ? gameErrors[last.id] : null
+  // Mientras haya un pedido esperando al profe no se puede encolar otro.
+  const waitingForTeacher = last?.status === 'pending'
 
   return (
     <Layout
@@ -233,7 +235,24 @@ export default function StudentProject() {
         })}
       </ol>
 
-      <IterationForm version={last ? last.version : 1} busy={busy} detectedError={lastError} onSubmit={submitIteration} />
+      {waitingForTeacher ? (
+        <div className="waiting waiting--muted">
+          <div>
+            <strong>Ya enviaste tu pedido</strong>
+            <p>
+              Cuando el profe cargue esta version vas a poder pedir mejoras nuevas. Si la resolves vos, pegá la
+              respuesta de la IA arriba y se desbloquea solo.
+            </p>
+          </div>
+        </div>
+      ) : (
+        <IterationForm
+          version={last ? last.version : 1}
+          busy={busy}
+          detectedError={lastError}
+          onSubmit={submitIteration}
+        />
+      )}
     </Layout>
   )
 }
