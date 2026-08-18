@@ -45,8 +45,6 @@ function roomName(subscribeEvent, payload) {
   switch (subscribeEvent) {
     case 'subscribe:project':
       return `project:${payload}`
-    case 'subscribe:teacher':
-      return `teacher:${payload}`
     case 'subscribe:dashboard':
       return 'dashboard'
     case 'subscribe:gallery':

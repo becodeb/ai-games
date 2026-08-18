@@ -8,6 +8,7 @@ import {
   listDashboard,
   listGallery,
   listProjectsForStudents,
+  markIterationSent,
   saveIterationCode,
   updateProject
 } from '../lib/store.js'
@@ -74,39 +75,50 @@ router.post('/projects/:id/iterations', (req, res) => {
   res.status(201).json(detail)
 })
 
+// "Ya lo copie pero igual lo quiero mandar": no crea una version nueva.
+router.post('/iterations/:id/send', (req, res) => {
+  const projectId = markIterationSent(req.params.id)
+  if (!projectId) return res.status(404).json({ error: 'Iteracion no encontrada.' })
+
+  broadcastProject(projectId)
+  res.json(getProjectDetail(projectId))
+})
+
 /* --------------------------------------------------------------- profesor */
 
 router.get('/dashboard', (_req, res) => {
   res.json(listDashboard())
 })
 
-router.get('/dashboard/:id', (req, res) => {
-  const detail = getProjectDetail(req.params.id, { includeCode: true })
-  if (!detail) return res.status(404).json({ error: 'Proyecto no encontrado.' })
-  res.json(detail)
-})
-
-router.patch('/dashboard/:id', (req, res) => {
-  const { title, studentName, aiChatUrl, teacherNote, status } = req.body || {}
-  const projectId = updateProject(req.params.id, { title, studentName, aiChatUrl, teacherNote, status })
+router.patch('/projects/:id', (req, res) => {
+  const { title, studentName, teacherName, aiChatUrl, teacherNote, status } = req.body || {}
+  const projectId = updateProject(req.params.id, {
+    title,
+    studentName,
+    teacherName,
+    aiChatUrl,
+    teacherNote,
+    status
+  })
   if (!projectId) return res.status(404).json({ error: 'Proyecto no encontrado.' })
 
   broadcastProject(projectId)
-  res.json(getProjectDetail(projectId, { includeCode: true }))
+  res.json(getProjectDetail(projectId))
 })
 
-// Guardar / corregir el codigo de cualquier iteracion (tambien las viejas).
+// Guardar / corregir el codigo de cualquier iteracion (profe o alumno).
 router.put('/iterations/:id/code', (req, res) => {
-  const { html, css, js } = req.body || {}
+  const { html, css, js, publishedBy } = req.body || {}
   const projectId = saveIterationCode(req.params.id, {
     html: asString(html),
     css: asString(css),
-    js: asString(js)
+    js: asString(js),
+    publishedBy: asString(publishedBy)
   })
   if (!projectId) return res.status(404).json({ error: 'Iteracion no encontrada.' })
 
   broadcastProject(projectId)
-  res.json(getProjectDetail(projectId, { includeCode: true }))
+  res.json(getProjectDetail(projectId))
 })
 
 // Previsualizacion sin persistir: devuelve el mismo documento que veria el alumno.

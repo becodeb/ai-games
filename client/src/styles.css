@@ -1493,6 +1493,200 @@ main.container--wide {
   50% { opacity: 1; transform: translateY(-5px); }
 }
 
+/* -------------------------------------------------- prompt con huecos */
+
+.compose {
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+.compose--nested {
+  margin-top: 40px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.compose__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.compose__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.pdoc {
+  padding: 28px 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.pdoc__line {
+  font-size: 20px;
+  line-height: 2.1;
+  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+}
+
+.pdoc__line:last-child {
+  margin-bottom: 0;
+}
+
+.pdoc--md .pdoc__line {
+  font-size: 17px;
+  line-height: 2;
+}
+
+.pdoc__text {
+  color: var(--text-soft);
+}
+
+.pdoc__suggestions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--border);
+  flex-wrap: wrap;
+}
+
+.pdoc__suggestions-label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+
+.chip {
+  height: 28px;
+  padding: 0 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg-sunken);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+}
+
+.chip:hover {
+  background: var(--surface-hover);
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+/* El hueco: un textarea encima de un espejo invisible que define el tamano. */
+.slot {
+  display: inline-grid;
+  vertical-align: baseline;
+  max-width: 100%;
+  border-bottom: 2px solid var(--border-strong);
+  border-radius: 2px 2px 0 0;
+  transition: border-color 0.14s ease, background 0.14s ease;
+}
+
+.slot--block {
+  display: grid;
+  width: 100%;
+}
+
+.slot--filled {
+  border-bottom-color: var(--accent);
+}
+
+.slot:focus-within {
+  border-bottom-color: var(--info);
+  background: var(--info-bg);
+}
+
+.slot--invalid {
+  border-bottom-color: var(--danger);
+  background: var(--danger-bg);
+}
+
+.slot__mirror,
+.slot__input {
+  grid-area: 1 / 1;
+  min-width: 3ch;
+  padding: 0 3px;
+  font: inherit;
+  letter-spacing: inherit;
+  line-height: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+}
+
+.slot__mirror {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.slot__input {
+  border: 0;
+  margin: 0;
+  background: transparent;
+  color: var(--text);
+  font-weight: 500;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+}
+
+.slot__input::placeholder {
+  color: var(--text-muted);
+  font-weight: 400;
+  font-style: italic;
+}
+
+.rules {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+/* --------------------------------------------- pegar la respuesta de la IA */
+
+.drop {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+}
+
+.actions--tight {
+  margin-top: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+.project-card__flag--other {
+  color: var(--text-muted);
+}
+
 /* ------------------------------------------------------------ responsive */
 
 @media (max-width: 960px) {
@@ -1535,6 +1729,19 @@ main.container--wide {
 
   .input--search {
     max-width: none;
+  }
+
+  .pdoc {
+    padding: 20px 18px;
+  }
+
+  .pdoc__line {
+    font-size: 17px;
+    line-height: 2;
+  }
+
+  .compose__head {
+    align-items: flex-start;
   }
 
   .toolbar {

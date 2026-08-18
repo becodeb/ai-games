@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
+import NameModal from '../components/NameModal.jsx'
 import { Badge, EmptyState, SectionTitle, Spinner } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { subscribe } from '../lib/socket.js'
 import { PROJECT_STATUS, relativeTime, statusInfo } from '../lib/format.js'
+import { getTeacherName, setTeacherName } from '../lib/teacher.js'
 
 const FILTERS = [
   { value: 'all', label: 'Todos' },
@@ -17,6 +19,8 @@ export default function Dashboard() {
   const [projects, setProjects] = useState(null)
   const [filter, setFilter] = useState('all')
   const [query, setQuery] = useState('')
+  const [me, setMe] = useState(() => getTeacherName())
+  const [askName, setAskName] = useState(() => !getTeacherName())
 
   useEffect(() => {
     let alive = true
@@ -63,6 +67,9 @@ export default function Dashboard() {
       wide
       actions={
         <>
+          <button type="button" className="btn btn--ghost" onClick={() => setAskName(true)}>
+            {me ? `Sos ${me}` : 'Poner mi nombre'}
+          </button>
           <a className="btn btn--ghost" href="/galeria" target="_blank" rel="noreferrer">
             Galeria
           </a>
@@ -75,7 +82,7 @@ export default function Dashboard() {
       <SectionTitle
         eyebrow="Panel del profesor"
         title="Proyectos del taller"
-        description="Los pedidos pendientes aparecen primero. Todo se actualiza solo."
+        description="Los pedidos pendientes aparecen primero. Al abrir uno queda tomado a tu nombre."
       />
 
       <div className="toolbar">
@@ -111,7 +118,7 @@ export default function Dashboard() {
           <h3 className="group-title group-title--warn">Esperando respuesta ({pending.length})</h3>
           <div className="card-grid">
             {pending.map((project) => (
-              <ProjectCard key={project.id} project={project} highlight />
+              <ProjectCard key={project.id} project={project} me={me} highlight />
             ))}
           </div>
         </>
@@ -122,17 +129,30 @@ export default function Dashboard() {
           <h3 className="group-title">Resto de los proyectos</h3>
           <div className="card-grid">
             {rest.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              <ProjectCard key={project.id} project={project} me={me} />
             ))}
           </div>
         </>
       ) : null}
+
+      <NameModal
+        open={askName}
+        current={me}
+        onSave={(name) => {
+          setTeacherName(name)
+          setMe(name)
+          setAskName(false)
+        }}
+        onClose={me ? () => setAskName(false) : undefined}
+      />
     </Layout>
   )
 }
 
-function ProjectCard({ project, highlight = false }) {
+function ProjectCard({ project, me, highlight = false }) {
   const status = statusInfo(PROJECT_STATUS, project.status)
+  const takenByOther = project.teacherName && project.teacherName !== me
+
   return (
     <Link className={`project-card${highlight ? ' project-card--highlight' : ''}`} to={`/dashboard/${project.id}`}>
       <div className="project-card__head">
@@ -147,8 +167,10 @@ function ProjectCard({ project, highlight = false }) {
         </span>
         <span>{relativeTime(project.updatedAt)}</span>
       </div>
-      {project.pendingVersion ? (
-        <span className="project-card__flag">Pendiente: version {project.pendingVersion}</span>
+      {project.teacherName ? (
+        <span className={`project-card__flag${takenByOther ? ' project-card__flag--other' : ''}`}>
+          {takenByOther ? `Lo tiene ${project.teacherName}` : 'Lo tenes vos'}
+        </span>
       ) : null}
     </Link>
   )

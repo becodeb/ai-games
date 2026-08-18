@@ -19,21 +19,22 @@ async function request(path, { method = 'GET', body } = {}) {
 export const api = {
   health: () => request('/health'),
 
-  // Alumno
+  // Proyectos
   listProjects: () => request('/projects'),
   createProject: (data) => request('/projects', { method: 'POST', body: data }),
   getProject: (id) => request(`/projects/${id}`),
-  addIteration: (id, data) => request(`/projects/${id}/iterations`, { method: 'POST', body: data }),
+  patchProject: (id, data) => request(`/projects/${id}`, { method: 'PATCH', body: data }),
 
-  // Profesor
-  listDashboard: () => request('/dashboard'),
-  getDashboardProject: (id) => request(`/dashboard/${id}`),
-  patchProject: (id, data) => request(`/dashboard/${id}`, { method: 'PATCH', body: data }),
+  // Iteraciones
+  addIteration: (id, data) => request(`/projects/${id}/iterations`, { method: 'POST', body: data }),
+  sendIteration: (iterationId) => request(`/iterations/${iterationId}/send`, { method: 'POST', body: {} }),
   saveIterationCode: (iterationId, code) => request(`/iterations/${iterationId}/code`, { method: 'PUT', body: code }),
-  // Devuelve exactamente el documento que veria el alumno, sin guardar nada.
+
+  // Devuelve exactamente el documento que se va a publicar, sin guardar nada.
   preview: (code) => request('/preview', { method: 'POST', body: code }),
 
-  // Galeria
+  // Profesor y galeria
+  listDashboard: () => request('/dashboard'),
   listGallery: () => request('/gallery')
 }
 

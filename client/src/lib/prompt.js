@@ -1,41 +1,20 @@
 /**
- * Construccion de prompts.
+ * El prompt es un documento con huecos.
  *
- * - `readable`: lo que el alumno ve en pantalla. Lenguaje simple, nombra HTML/CSS/JS
- *   para que el profesor pueda explicar que se esta pidiendo.
- * - `full`: readable + instrucciones tecnicas ocultas que se agregan al copiar o enviar.
+ * Cada linea es una frase fija (que el alumno no puede romper) con uno o mas
+ * huecos editables. Las lineas marcadas como `optional` desaparecen del prompt
+ * final si su hueco quedo vacio, asi el texto que se copia nunca queda cojo.
  */
-
-export const GAME_TYPES = [
-  { value: 'plataformas', label: 'Plataformas 2D', hint: 'Saltar entre plataformas y esquivar obstaculos.' },
-  { value: 'esquivar', label: 'Esquivar objetos', hint: 'Moverse para no chocar con cosas que caen.' },
-  { value: 'atrapar', label: 'Atrapar cosas', hint: 'Juntar objetos buenos y evitar los malos.' },
-  { value: 'preguntas', label: 'Preguntas y respuestas', hint: 'Trivia con opciones y puntaje.' },
-  { value: 'aventura', label: 'Aventura de texto', hint: 'Historia con decisiones y finales distintos.' },
-  { value: 'clicker', label: 'Clicker', hint: 'Hacer clic para sumar puntos y desbloquear mejoras.' },
-  { value: 'laberinto', label: 'Laberinto', hint: 'Llegar a la salida sin tocar las paredes.' },
-  { value: 'memoria', label: 'Memoria', hint: 'Dar vuelta cartas y encontrar los pares.' },
-  { value: 'personalizado', label: 'Otro (lo escribo yo)', hint: 'Describi vos la mecanica del juego.' }
-]
-
-export const CONTROL_OPTIONS = [
-  { value: 'teclado', label: 'Flechas del teclado' },
-  { value: 'teclado-espacio', label: 'Flechas + barra espaciadora' },
-  { value: 'mouse', label: 'Mouse' },
-  { value: 'clics', label: 'Clics en botones de la pantalla' },
-  { value: 'teclado-mouse', label: 'Teclado y mouse' }
-]
 
 export const INITIAL_FIELDS = {
   title: '',
   studentName: '',
-  gameType: 'plataformas',
-  customGameType: '',
+  gameType: '',
   character: '',
   setting: '',
   winRule: '',
   loseRule: '',
-  controls: 'teclado',
+  controls: '',
   extra: ''
 }
 
@@ -46,131 +25,221 @@ export const ITERATION_FIELDS = {
   extra: ''
 }
 
-export const ITERATION_SLOTS = [
+const TYPE_SUGGESTIONS = [
+  'de plataformas, saltando entre plataformas',
+  'de esquivar cosas que caen',
+  'de atrapar objetos que caen',
+  'de preguntas y respuestas',
+  'de aventura con texto y decisiones',
+  'de hacer clic para sumar puntos',
+  'de laberinto',
+  'de encontrar pares de cartas',
+  'de carreras vista desde arriba',
+  'de disparar a objetivos'
+]
+
+const CONTROL_SUGGESTIONS = [
+  'las flechas del teclado',
+  'las flechas y la barra espaciadora',
+  'el mouse',
+  'botones grandes en la pantalla',
+  'las teclas A y D para moverse y espacio para saltar'
+]
+
+/* ------------------------------------------------------------- plantillas */
+
+export const INITIAL_LINES = [
   {
-    key: 'fix',
-    label: 'Arreglo de error',
-    placeholder: 'Ej.: cuando toco el borde derecho el personaje desaparece.',
-    hint: 'Conta que pasa mal y cuando pasa.'
+    id: 'intro',
+    tokens: [
+      {
+        text:
+          'Programa un videojuego para jugar en el navegador. Tiene que ser un solo archivo con HTML, CSS y JavaScript.'
+      }
+    ]
   },
   {
-    key: 'visual',
-    label: 'Mejora visual',
-    placeholder: 'Ej.: que el fondo sea un cielo con estrellas y el personaje mas grande.',
-    hint: 'Colores, tamanos, animaciones, pantalla de inicio.'
+    id: 'title',
+    tokens: [{ text: 'El juego se llama ' }, { field: 'title', placeholder: 'el nombre que quieras' }, { text: '.' }]
   },
   {
-    key: 'rule',
-    label: 'Regla o mecanica nueva',
-    placeholder: 'Ej.: agregar un enemigo que aparece cada 10 segundos.',
-    hint: 'Algo nuevo que el juego todavia no hace.'
+    id: 'author',
+    optional: true,
+    tokens: [{ text: 'Lo invento ' }, { field: 'studentName', placeholder: 'tu nombre o el del equipo' }, { text: '.' }]
   },
   {
-    key: 'extra',
-    label: 'Otro cambio (opcional)',
-    placeholder: 'Ej.: mostrar el puntaje maximo en la esquina.',
-    hint: 'Solo si te queda algo afuera.'
+    id: 'type',
+    tokens: [
+      { text: 'Es un juego ' },
+      { field: 'gameType', placeholder: 'conta como se juega', suggestions: TYPE_SUGGESTIONS, grow: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'character',
+    tokens: [
+      { text: 'El personaje principal es ' },
+      { field: 'character', placeholder: 'quien es y como se ve', grow: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'setting',
+    optional: true,
+    tokens: [
+      { text: 'Todo pasa en ' },
+      { field: 'setting', placeholder: 'donde transcurre, que se ve de fondo', grow: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'win',
+    tokens: [{ text: 'Se gana cuando ' }, { field: 'winRule', placeholder: 'que hay que lograr', grow: true }, { text: '.' }]
+  },
+  {
+    id: 'lose',
+    optional: true,
+    tokens: [{ text: 'Se pierde cuando ' }, { field: 'loseRule', placeholder: 'que hace perder', grow: true }, { text: '.' }]
+  },
+  {
+    id: 'controls',
+    optional: true,
+    tokens: [
+      { text: 'Se juega con ' },
+      { field: 'controls', placeholder: 'como se maneja', suggestions: CONTROL_SUGGESTIONS, grow: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'extra',
+    optional: true,
+    tokens: [
+      { text: 'Ademas quiero que ' },
+      { field: 'extra', placeholder: 'todo lo que se te ocurra: niveles, enemigos, sonidos, power-ups...', multiline: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'closing',
+    tokens: [{ text: 'Que se entienda facil, que se vea lindo y que se pueda volver a jugar cuando termina.' }]
   }
 ]
 
-function labelForGameType(fields) {
-  if (fields.gameType === 'personalizado') {
-    return (fields.customGameType || '').trim() || 'un juego original inventado por mi'
+export const ITERATION_LINES = [
+  {
+    id: 'intro',
+    tokens: [
+      { text: 'Segui trabajando sobre el mismo juego. Aplica todos estos cambios juntos, en una sola version nueva:' }
+    ]
+  },
+  {
+    id: 'fix',
+    optional: true,
+    tokens: [
+      { text: '1. Arreglar este error: ' },
+      { field: 'fix', placeholder: 'que pasa mal y cuando pasa', multiline: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'visual',
+    optional: true,
+    tokens: [
+      { text: '2. Mejorar como se ve: ' },
+      { field: 'visual', placeholder: 'colores, tamanos, animaciones, pantallas', multiline: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'rule',
+    optional: true,
+    tokens: [
+      { text: '3. Agregar esto nuevo: ' },
+      { field: 'rule', placeholder: 'una regla, un enemigo, un nivel, un power-up', multiline: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'extra',
+    optional: true,
+    tokens: [
+      { text: '4. Tambien: ' },
+      { field: 'extra', placeholder: 'cualquier otro cambio', multiline: true },
+      { text: '.' }
+    ]
+  },
+  {
+    id: 'closing',
+    tokens: [{ text: 'Todo lo que ya funcionaba tiene que seguir igual.' }]
   }
-  const found = GAME_TYPES.find((t) => t.value === fields.gameType)
-  return found ? found.label.toLowerCase() : 'juego 2D simple'
+]
+
+/* -------------------------------------------------------------- builders */
+
+function lineFields(line) {
+  return line.tokens.filter((token) => token.field).map((token) => token.field)
 }
 
-function labelForControls(value) {
-  const found = CONTROL_OPTIONS.find((c) => c.value === value)
-  return found ? found.label.toLowerCase() : 'flechas del teclado'
+function lineHasContent(line, values) {
+  return lineFields(line).some((key) => (values[key] || '').trim())
 }
 
-function orDefault(value, fallback) {
-  const text = (value || '').trim()
-  return text || fallback
+function renderLine(line, values) {
+  return line.tokens
+    .map((token) => (token.field ? (values[token.field] || '').trim() : token.text))
+    .join('')
+    .replace(/\s+([.,])/g, '$1')
 }
 
-/** Reglas de formato que se pegan al final del prompt, invisibles para el alumno. */
+/** Texto legible: exactamente lo que el alumno ve en pantalla. */
+export function renderPrompt(lines, values) {
+  return lines
+    .filter((line) => !line.optional || lineHasContent(line, values))
+    .map((line) => renderLine(line, values))
+    .join('\n')
+}
+
+/** Campos obligatorios que siguen vacios. */
+export function missingRequired(lines, values, required) {
+  return required.filter((key) => !(values[key] || '').trim())
+}
+
+export const INITIAL_REQUIRED = ['title', 'gameType', 'character', 'winRule']
+
+export function countFilled(lines, values) {
+  const keys = lines.flatMap(lineFields)
+  return keys.filter((key) => (values[key] || '').trim()).length
+}
+
+/* --------------------------------------------------- instrucciones ocultas */
+
+/**
+ * Reglas de formato que se pegan al final al copiar o enviar.
+ * Solo definen COMO tiene que venir la respuesta, no que juego hacer:
+ * el contenido creativo queda entero en manos del alumno.
+ */
 export const TECHNICAL_INSTRUCTIONS = `
---- INSTRUCCIONES TECNICAS (para la IA, no las expliques en la respuesta) ---
-1. Devolve UN UNICO archivo HTML completo y autonomo: el CSS dentro de una etiqueta <style> y todo el JavaScript dentro de una etiqueta <script>, en el mismo archivo.
-2. Respondé SOLO con el codigo, dentro de un unico bloque \`\`\`html ... \`\`\`. Sin explicaciones antes ni despues.
-3. Prohibido usar librerias externas, CDNs, imagenes por URL, fuentes remotas, audio externo o fetch a internet: el juego tiene que funcionar sin conexion.
-4. Los graficos se hacen con <canvas>, CSS, formas geometricas o caracteres de texto dibujados por codigo.
-5. El juego debe ocupar el 100% del ancho y del alto disponibles, adaptarse al tamano de la ventana (escuchar el evento resize) y verse bien dentro de un iframe.
-6. Incluí: pantalla de inicio con las instrucciones y un boton "Empezar", marcador visible durante la partida, y pantalla final con el resultado y un boton "Volver a jugar".
-7. Manejo de errores: nada de variables sin definir ni recursos inexistentes. El juego no se tiene que romper si el jugador aprieta cualquier tecla o hace clic en cualquier lado. Envolvé en try/catch lo que pueda fallar.
-8. No uses alert(), prompt() ni confirm(). Los mensajes se muestran dentro de la pantalla del juego.
-9. Si guardas el puntaje maximo, tolera que el almacenamiento del navegador no este disponible (usa try/catch y segui funcionando igual).
-10. Compatible con las versiones actuales de Chrome, Firefox y Edge. Nada experimental.
-11. Comenta el codigo en espanol, con frases cortas, para que lo pueda leer un chico de 10 a 14 anos.
-12. El juego tiene que arrancar y ser jugable apenas se abre el archivo, sin ningun paso extra.
+--- FORMATO DE LA RESPUESTA (instrucciones para la IA) ---
+1. Devolve UN UNICO archivo HTML completo y autonomo, desde <!DOCTYPE html> hasta </html>, con el CSS dentro de <style> y el JavaScript dentro de <script>.
+2. Responde SOLO con ese codigo, dentro de un unico bloque \`\`\`html ... \`\`\`, sin explicaciones antes ni despues.
+3. No uses librerias externas, CDNs, imagenes por URL, fuentes remotas ni pedidos a internet: tiene que funcionar sin conexion.
+4. Los graficos se hacen por codigo: <canvas>, CSS, formas o texto.
+5. Que ocupe todo el ancho y el alto disponibles y se adapte al tamano de la ventana (escucha el evento resize).
+6. No uses alert(), prompt() ni confirm(): los mensajes se muestran dentro del juego.
+7. Si guardas datos en el navegador, envolvelo en try/catch y segui funcionando aunque falle.
+8. Que no se rompa: nada de variables sin definir ni recursos que no existan, pase lo que pase con el teclado o el mouse.
+9. Comenta el codigo en espanol, con frases cortas.
+10. Respeta el pedido tal como esta escrito arriba. Si algo no se entiende, elegi la interpretacion mas divertida y seguí adelante.
 `.trim()
 
-/** Prompt inicial en la version simple que ve el alumno. */
-export function buildInitialReadable(fields) {
-  const lines = [
-    'Quiero que programes un videojuego que se juegue en el navegador, con HTML, CSS y JavaScript en un solo archivo.',
-    '',
-    `Titulo del juego: ${orDefault(fields.title, 'Mi juego')}`,
-    `Tipo de juego: ${labelForGameType(fields)}`,
-    `Protagonista: ${orDefault(fields.character, 'un personaje simple hecho con formas')}`,
-    `Escenario y fondo: ${orDefault(fields.setting, 'un fondo simple de un solo color')}`,
-    `Se gana cuando: ${orDefault(fields.winRule, 'el jugador llega al final del nivel')}`,
-    `Se pierde cuando: ${orDefault(fields.loseRule, 'el jugador choca con un obstaculo')}`,
-    `Se juega con: ${labelForControls(fields.controls)}`
-  ]
-
-  if ((fields.extra || '').trim()) {
-    lines.push(`Detalle especial: ${fields.extra.trim()}`)
-  }
-
-  lines.push(
-    '',
-    'Que el juego sea facil de entender, que se vea lindo y que se pueda volver a jugar cuando termina.'
-  )
-
-  return lines.join('\n')
-}
-
-/** Prompt inicial enriquecido: es el que se copia al portapapeles y ve el profesor. */
-export function buildInitialFull(fields) {
-  return `${buildInitialReadable(fields)}\n\n${TECHNICAL_INSTRUCTIONS}`
-}
-
-export function countIterationChanges(fields) {
-  return ITERATION_SLOTS.filter((slot) => (fields[slot.key] || '').trim()).length
-}
-
-/** Prompt de iteracion en version simple. */
-export function buildIterationReadable(fields, context = {}) {
-  const title = orDefault(context.title, 'mi juego')
-  const version = context.version || 1
-
-  const changes = ITERATION_SLOTS
-    .filter((slot) => (fields[slot.key] || '').trim())
-    .map((slot, index) => `${index + 1}. ${slot.label}: ${fields[slot.key].trim()}`)
-
-  return [
-    `Segui trabajando sobre el mismo juego "${title}" (version ${version}).`,
-    'Aplica TODOS estos cambios juntos, en una sola version nueva:',
-    '',
-    ...changes,
-    '',
-    'Todo lo demas que ya funcionaba tiene que seguir igual.'
-  ].join('\n')
-}
-
-/** Prompt de iteracion enriquecido. */
-export function buildIterationFull(fields, context = {}) {
-  const extra = `
---- INSTRUCCIONES TECNICAS DE LA ITERACION ---
-A. Devolvé el archivo HTML COMPLETO de nuevo, desde <!DOCTYPE html> hasta </html>. Nunca fragmentos, nunca "el resto queda igual", nunca "...".
-B. Conservá todo lo que ya andaba: mecanicas, puntaje, pantallas y estilo, salvo lo que se pide cambiar.
-C. Mantené las mismas reglas de formato: un unico archivo, sin librerias ni recursos externos, respuesta en un unico bloque \`\`\`html ... \`\`\` y sin explicaciones.
-D. Si un pedido es imposible o rompe el juego, resolvelo de la forma mas parecida posible y dejalo funcionando igual.
+export const ITERATION_INSTRUCTIONS = `
+--- FORMATO DE LA RESPUESTA (instrucciones para la IA) ---
+A. Devolve el archivo HTML COMPLETO de nuevo, desde <!DOCTYPE html> hasta </html>. Nunca fragmentos, nunca "el resto queda igual", nunca "...".
+B. Conserva todo lo que ya funcionaba: mecanicas, puntaje, pantallas y estilo, salvo lo que se pide cambiar.
+C. Mismas reglas de siempre: un unico archivo, sin librerias ni recursos externos, respuesta en un unico bloque \`\`\`html ... \`\`\` y sin explicaciones.
+D. Si un pedido rompe el juego, resolvelo de la forma mas parecida posible y dejalo andando.
 `.trim()
 
-  return `${buildIterationReadable(fields, context)}\n\n${extra}`
+export function withInstructions(readable, instructions) {
+  return `${readable}\n\n${instructions}`
 }

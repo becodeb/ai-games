@@ -4,7 +4,6 @@ let io = null
 
 export const rooms = {
   project: (id) => `project:${id}`,
-  teacher: (id) => `teacher:${id}`,
   dashboard: 'dashboard',
   gallery: 'gallery'
 }
@@ -17,13 +16,6 @@ export function attachIo(instance) {
       if (typeof projectId !== 'string' || !projectId) return
       socket.join(rooms.project(projectId))
       const detail = getProjectDetail(projectId)
-      if (detail) socket.emit('project:sync', detail)
-    })
-
-    socket.on('subscribe:teacher', (projectId) => {
-      if (typeof projectId !== 'string' || !projectId) return
-      socket.join(rooms.teacher(projectId))
-      const detail = getProjectDetail(projectId, { includeCode: true })
       if (detail) socket.emit('project:sync', detail)
     })
 
@@ -43,15 +35,12 @@ export function attachIo(instance) {
   })
 }
 
-/** Empuja el estado nuevo del proyecto a alumno, profe, dashboard y galeria. */
+/** Empuja el estado nuevo del proyecto a alumnos, profes, dashboard y galeria. */
 export function broadcastProject(projectId) {
   if (!io || !projectId) return
 
-  const studentView = getProjectDetail(projectId)
-  const teacherView = getProjectDetail(projectId, { includeCode: true })
-
-  if (studentView) io.to(rooms.project(projectId)).emit('project:sync', studentView)
-  if (teacherView) io.to(rooms.teacher(projectId)).emit('project:sync', teacherView)
+  const detail = getProjectDetail(projectId)
+  if (detail) io.to(rooms.project(projectId)).emit('project:sync', detail)
 
   io.to(rooms.dashboard).emit('dashboard:sync', listDashboard())
   io.to(rooms.gallery).emit('gallery:sync', listGallery())

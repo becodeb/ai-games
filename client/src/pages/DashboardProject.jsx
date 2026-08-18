@@ -2,12 +2,22 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
 import GameFrame from '../components/GameFrame.jsx'
+import NameModal from '../components/NameModal.jsx'
 import { Badge, EmptyState, PromptBlock, Spinner } from '../components/ui.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { api, downloadUrl } from '../lib/api.js'
 import { subscribe } from '../lib/socket.js'
-import { ITERATION_STATUS, PROJECT_STATUS, clockTime, copyToClipboard, relativeTime, statusInfo } from '../lib/format.js'
+import {
+  ITERATION_STATUS,
+  PROJECT_STATUS,
+  clockTime,
+  copyToClipboard,
+  relativeTime,
+  statusInfo
+} from '../lib/format.js'
 import { looksLikeFullDocument, stripCodeFences } from '../lib/code.js'
+import { getTeacherName, setTeacherName } from '../lib/teacher.js'
+import { buildRestartContext, iterationCodeText, previousWithCode } from '../lib/summary.js'
 
 const EMPTY_CODE = { html: '', css: '', js: '' }
 
@@ -32,6 +42,9 @@ export default function DashboardProject() {
   const [preview, setPreview] = useState('')
   const [aiUrl, setAiUrl] = useState('')
   const [aiUrlDirty, setAiUrlDirty] = useState(false)
+  const [me, setMe] = useState(() => getTeacherName())
+  const [askName, setAskName] = useState(() => !getTeacherName())
+  const [showBase, setShowBase] = useState(false)
 
   const dirtyRef = useRef(false)
   dirtyRef.current = dirty
@@ -43,7 +56,7 @@ export default function DashboardProject() {
     setDetail(null)
     setLoadError('')
     api
-      .getDashboardProject(id)
+      .getProject(id)
       .then((data) => alive && setDetail(data))
       .catch((err) => alive && setLoadError(err.message))
     return () => {
@@ -52,7 +65,7 @@ export default function DashboardProject() {
   }, [id])
 
   useEffect(() => {
-    return subscribe('subscribe:teacher', id, {
+    return subscribe('subscribe:project', id, {
       'project:sync': (data) => {
         if (data?.project?.id === id) setDetail(data)
       }
@@ -62,11 +75,26 @@ export default function DashboardProject() {
   const iterations = detail?.iterations || []
   const project = detail?.project
 
+  /* ------------------------------------------- tomar el proyecto al abrir */
+
+  const claimedRef = useRef(false)
+  useEffect(() => {
+    if (!project || !me || claimedRef.current) return
+    if (project.status !== 'pending') return
+
+    claimedRef.current = true
+    api
+      .patchProject(id, { status: 'processing', teacherName: me })
+      .then(setDetail)
+      .catch(() => {
+        claimedRef.current = false
+      })
+  }, [project, me, id])
+
   // Seleccion por defecto: la primera iteracion pendiente, si no la ultima.
   useEffect(() => {
     if (!iterations.length) return
-    const stillThere = iterations.some((it) => it.id === selectedId)
-    if (stillThere) return
+    if (iterations.some((it) => it.id === selectedId)) return
     const pending = iterations.find((it) => it.status === 'pending')
     setSelectedId((pending || iterations[iterations.length - 1]).id)
   }, [iterations, selectedId])
@@ -128,10 +156,14 @@ export default function DashboardProject() {
     setForm((current) => ({ ...current, [key]: value }))
   }, [])
 
-  async function copyPrompt() {
-    if (!selected) return
-    const ok = await copyToClipboard(selected.promptFull)
-    toast(ok ? 'Prompt copiado, pegalo en la IA' : 'No se pudo copiar', ok ? 'ok' : 'error')
+  const baseIteration = useMemo(
+    () => (selected ? previousWithCode(iterations, selected.version) : null),
+    [iterations, selected]
+  )
+
+  async function copyText(text, message) {
+    const ok = await copyToClipboard(text)
+    toast(ok ? message : 'No se pudo copiar', ok ? 'ok' : 'error')
   }
 
   async function save() {
@@ -142,7 +174,7 @@ export default function DashboardProject() {
     }
     setSaving(true)
     try {
-      const data = await api.saveIterationCode(selected.id, form)
+      const data = await api.saveIterationCode(selected.id, { ...form, publishedBy: 'teacher' })
       setDetail(data)
       setDirty(false)
       toast('Enviado al alumno', 'ok')
@@ -191,6 +223,7 @@ export default function DashboardProject() {
 
   const status = statusInfo(PROJECT_STATUS, project.status)
   const isFullDoc = looksLikeFullDocument(form.html)
+  const takenByOther = project.teacherName && project.teacherName !== me
 
   return (
     <Layout
@@ -198,6 +231,9 @@ export default function DashboardProject() {
       wide
       actions={
         <>
+          <button type="button" className="btn btn--ghost" onClick={() => setAskName(true)}>
+            {me ? `Sos ${me}` : 'Poner mi nombre'}
+          </button>
           <Link className="btn btn--ghost" to="/dashboard">
             Volver al panel
           </Link>
@@ -217,6 +253,20 @@ export default function DashboardProject() {
           </p>
         </div>
         <div className="project-head__controls">
+          {project.teacherName ? (
+            <Badge tone={takenByOther ? 'warn' : 'info'}>
+              {takenByOther ? `Lo tiene ${project.teacherName}` : `Lo tenes vos`}
+            </Badge>
+          ) : null}
+          {takenByOther ? (
+            <button
+              type="button"
+              className="btn btn--sm"
+              onClick={() => patch({ teacherName: me }, 'Proyecto tomado')}
+            >
+              Tomarlo yo
+            </button>
+          ) : null}
           <Badge tone={status.tone}>{status.label}</Badge>
           <div className="select-wrap select-wrap--compact">
             <select
@@ -270,22 +320,19 @@ export default function DashboardProject() {
         {/* -------------------------------------------- columna izquierda */}
         <section className="workspace__col">
           <div className="version-list">
-            {iterations.map((iteration) => {
-              const info = statusInfo(ITERATION_STATUS, iteration.status)
-              return (
-                <button
-                  key={iteration.id}
-                  type="button"
-                  className={`version-chip${iteration.id === selectedId ? ' version-chip--active' : ''}${
-                    iteration.status === 'pending' ? ' version-chip--pending' : ''
-                  }`}
-                  onClick={() => setSelectedId(iteration.id)}
-                  title={info.label}
-                >
-                  v{iteration.version}
-                </button>
-              )
-            })}
+            {iterations.map((iteration) => (
+              <button
+                key={iteration.id}
+                type="button"
+                className={`version-chip${iteration.id === selectedId ? ' version-chip--active' : ''}${
+                  iteration.status === 'pending' ? ' version-chip--pending' : ''
+                }`}
+                onClick={() => setSelectedId(iteration.id)}
+                title={statusInfo(ITERATION_STATUS, iteration.status).label}
+              >
+                v{iteration.version}
+              </button>
+            ))}
           </div>
 
           {selected ? (
@@ -293,7 +340,7 @@ export default function DashboardProject() {
               <div className="card">
                 <div className="card__head">
                   <h3>
-                    {selected.kind === 'initial' ? 'Prompt inicial' : `Pedido de mejoras ${selected.version}`}
+                    {selected.kind === 'initial' ? 'Prompt inicial' : `Cambios pedidos (v${selected.version})`}
                   </h3>
                   <div className="card__head-actions">
                     <span className="muted">{clockTime(selected.createdAt)}</span>
@@ -303,26 +350,98 @@ export default function DashboardProject() {
                   </div>
                 </div>
 
-                <button type="button" className="btn btn--primary btn--block btn--lg" onClick={copyPrompt}>
+                <button
+                  type="button"
+                  className="btn btn--primary btn--block btn--lg"
+                  onClick={() => copyText(selected.promptFull, 'Prompt copiado, pegalo en la IA')}
+                >
                   Copiar prompt para la IA
                 </button>
 
                 <PromptBlock text={selected.promptFull} label="Prompt completo (con reglas tecnicas)" />
               </div>
 
+              {/* ------------------------ contexto para retomar la charla */}
+              <div className="card">
+                <div className="card__head">
+                  <h3>Si se corto la conversacion</h3>
+                  <span className="muted">
+                    {baseIteration ? `Base: v${baseIteration.version}` : 'Sin version previa'}
+                  </span>
+                </div>
+
+                <div className="actions actions--tight">
+                  <button
+                    type="button"
+                    className="btn btn--sm"
+                    onClick={() =>
+                      copyText(
+                        buildRestartContext(project, iterations, { upToVersion: selected.version }),
+                        'Resumen completo copiado'
+                      )
+                    }
+                  >
+                    Copiar resumen + codigo base
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--sm"
+                    onClick={() =>
+                      copyText(
+                        buildRestartContext(project, iterations, {
+                          upToVersion: selected.version,
+                          includeCode: false
+                        }),
+                        'Historial de pedidos copiado'
+                      )
+                    }
+                  >
+                    Solo el historial
+                  </button>
+                  {baseIteration ? (
+                    <button
+                      type="button"
+                      className="btn btn--sm"
+                      onClick={() => copyText(iterationCodeText(baseIteration), `Codigo v${baseIteration.version} copiado`)}
+                    >
+                      Copiar codigo v{baseIteration.version}
+                    </button>
+                  ) : null}
+                </div>
+
+                {baseIteration ? (
+                  <>
+                    <button type="button" className="link-button" onClick={() => setShowBase((value) => !value)}>
+                      {showBase ? 'Ocultar el codigo anterior' : `Ver el codigo de la v${baseIteration.version}`}
+                    </button>
+                    {showBase ? (
+                      <textarea
+                        className="input input--code"
+                        rows={12}
+                        readOnly
+                        spellCheck={false}
+                        value={iterationCodeText(baseIteration)}
+                        onFocus={(event) => event.target.select()}
+                      />
+                    ) : null}
+                  </>
+                ) : (
+                  <p className="note">Esta es la primera version: todavia no hay codigo anterior.</p>
+                )}
+              </div>
+
               {selected.hasCode ? (
                 <div className="card">
                   <div className="card__head">
                     <h3>Version publicada</h3>
-                    <a className="btn btn--ghost btn--sm" href={downloadUrl(selected.id)} download>
-                      Descargar HTML
-                    </a>
+                    <div className="card__head-actions">
+                      {selected.publishedBy === 'student' ? <Badge>La subio el alumno</Badge> : null}
+                      <a className="btn btn--ghost btn--sm" href={downloadUrl(selected.id)} download>
+                        Descargar HTML
+                      </a>
+                    </div>
                   </div>
-                  <GameFrame
-                    iterationId={selected.id}
-                    title={`Publicado — v${selected.version}`}
-                    height={320}
-                  />
+                  <GameFrame iterationId={selected.id} title={`Publicado — v${selected.version}`} height={320} />
                 </div>
               ) : null}
             </>
@@ -438,6 +557,17 @@ export default function DashboardProject() {
           </div>
         </section>
       </div>
+
+      <NameModal
+        open={askName}
+        current={me}
+        onSave={(name) => {
+          setTeacherName(name)
+          setMe(name)
+          setAskName(false)
+        }}
+        onClose={me ? () => setAskName(false) : undefined}
+      />
     </Layout>
   )
 }

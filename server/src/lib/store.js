@@ -19,9 +19,9 @@ function parseJson(value, fallback) {
   }
 }
 
-function mapIteration(row, { includeCode = true } = {}) {
+function mapIteration(row) {
   if (!row) return null
-  const base = {
+  return {
     id: row.id,
     projectId: row.project_id,
     version: row.version,
@@ -31,13 +31,10 @@ function mapIteration(row, { includeCode = true } = {}) {
     promptReadable: row.prompt_readable,
     promptFull: row.prompt_full,
     hasCode: Boolean(row.code_document),
+    publishedBy: row.published_by || '',
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    deliveredAt: row.delivered_at
-  }
-  if (!includeCode) return base
-  return {
-    ...base,
+    deliveredAt: row.delivered_at,
     code: {
       html: row.code_html,
       css: row.code_css,
@@ -52,6 +49,7 @@ function mapProject(row) {
     id: row.id,
     title: row.title,
     studentName: row.student_name,
+    teacherName: row.teacher_name || '',
     status: row.status,
     aiChatUrl: row.ai_chat_url,
     teacherNote: row.teacher_note,
@@ -97,14 +95,11 @@ export function getIterationRow(id) {
   return statements.getIteration.get(id)
 }
 
-/**
- * @param {string} id
- * @param {{includeCode?: boolean}} options el codigo fuente solo viaja al dashboard del profesor
- */
-export function getProjectDetail(id, { includeCode = false } = {}) {
+/** Proyecto + todas sus iteraciones, con el codigo de cada version. */
+export function getProjectDetail(id) {
   const project = getProject(id)
   if (!project) return null
-  const iterations = statements.listIterations.all(id).map((row) => mapIteration(row, { includeCode }))
+  const iterations = statements.listIterations.all(id).map((row) => mapIteration(row))
   return { project, iterations }
 }
 
@@ -119,20 +114,18 @@ function recomputeStatus(projectId) {
   else if (delivered > 0) status = 'completed'
   else status = 'draft'
 
-  // "processing" lo marca el profesor a mano y solo vale mientras haya algo pendiente.
+  // "processing" lo marca un profe al tomar el proyecto y vale mientras haya algo pendiente.
   if (project.status === 'processing' && pending > 0) status = 'processing'
 
   db.prepare('UPDATE projects SET status = ?, updated_at = ? WHERE id = ?').run(status, now(), projectId)
 }
 
-/**
- * Crea el proyecto junto con su primera iteracion (version 1). Nunca sobreescribe nada.
- */
+/** Crea el proyecto junto con su primera iteracion (version 1). Nunca sobreescribe nada. */
 export function createProject(input) {
   const timestamp = now()
   const id = newId()
-  const title = clean(input.title, 160).trim() || 'Juego sin titulo'
-  const studentName = clean(input.studentName, 120).trim()
+  const title = clean(input.title, 200).trim() || 'Juego sin titulo'
+  const studentName = clean(input.studentName, 160).trim()
   const status = input.send ? 'pending' : 'copied'
 
   const tx = db.transaction(() => {
@@ -162,9 +155,7 @@ export function createProject(input) {
   return getProjectDetail(id)
 }
 
-/**
- * Agrega una iteracion nueva (version_N+1). Las anteriores quedan intactas.
- */
+/** Agrega una iteracion nueva (version N+1). Las anteriores quedan intactas. */
 export function addIteration(projectId, input) {
   const project = statements.getProject.get(projectId)
   if (!project) return null
@@ -190,6 +181,20 @@ export function addIteration(projectId, input) {
   return getProjectDetail(projectId)
 }
 
+/**
+ * Marca una iteracion ya creada como enviada a los profes, sin generar una version nueva.
+ * Cubre el caso "copie el prompt y despues igual lo quiero mandar".
+ */
+export function markIterationSent(iterationId) {
+  const row = statements.getIteration.get(iterationId)
+  if (!row) return null
+  if (row.status === 'copied') {
+    db.prepare("UPDATE iterations SET status = 'pending', updated_at = ? WHERE id = ?").run(now(), iterationId)
+    recomputeStatus(row.project_id)
+  }
+  return row.project_id
+}
+
 export function updateProject(projectId, patch) {
   const project = statements.getProject.get(projectId)
   if (!project) return null
@@ -199,11 +204,15 @@ export function updateProject(projectId, patch) {
 
   if (patch.title !== undefined) {
     fields.push('title = ?')
-    values.push(clean(patch.title, 160).trim() || project.title)
+    values.push(clean(patch.title, 200).trim() || project.title)
   }
   if (patch.studentName !== undefined) {
     fields.push('student_name = ?')
-    values.push(clean(patch.studentName, 120).trim())
+    values.push(clean(patch.studentName, 160).trim())
+  }
+  if (patch.teacherName !== undefined) {
+    fields.push('teacher_name = ?')
+    values.push(clean(patch.teacherName, 80).trim())
   }
   if (patch.aiChatUrl !== undefined) {
     fields.push('ai_chat_url = ?')
@@ -227,9 +236,7 @@ export function updateProject(projectId, patch) {
   return projectId
 }
 
-/**
- * Guarda (o corrige retroactivamente) el codigo de una iteracion cualquiera.
- */
+/** Guarda (o corrige retroactivamente) el codigo de cualquier iteracion. */
 export function saveIterationCode(iterationId, parts) {
   const row = statements.getIteration.get(iterationId)
   if (!row) return null
@@ -241,11 +248,12 @@ export function saveIterationCode(iterationId, parts) {
   const playable = hasPlayableCode({ html, css, js })
   const document = playable ? buildGameDocument({ html, css, js, title: project?.title }) : ''
   const timestamp = now()
+  const publishedBy = clean(parts.publishedBy, 20) || row.published_by || ''
 
   db.prepare(`
     UPDATE iterations
     SET code_html = ?, code_css = ?, code_js = ?, code_document = ?,
-        status = ?, updated_at = ?, delivered_at = ?
+        status = ?, published_by = ?, updated_at = ?, delivered_at = ?
     WHERE id = ?
   `).run(
     html,
@@ -253,6 +261,7 @@ export function saveIterationCode(iterationId, parts) {
     js,
     document,
     playable ? 'delivered' : row.status,
+    publishedBy,
     timestamp,
     playable ? (row.delivered_at || timestamp) : row.delivered_at,
     iterationId

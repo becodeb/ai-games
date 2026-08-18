@@ -55,3 +55,20 @@ export function newId() {
 export function now() {
   return new Date().toISOString()
 }
+
+/* ---------------------------------------------------------- migraciones */
+
+function columns(table) {
+  return db.prepare(`PRAGMA table_info(${table})`).all().map((c) => c.name)
+}
+
+function addColumn(table, name, definition) {
+  if (!columns(table).includes(name)) {
+    db.exec(`ALTER TABLE ${table} ADD COLUMN ${name} ${definition}`)
+  }
+}
+
+// Quien del equipo de profes tomo el proyecto.
+addColumn('projects', 'teacher_name', "TEXT NOT NULL DEFAULT ''")
+// Quien cargo el codigo de cada version: 'teacher' o 'student'.
+addColumn('iterations', 'published_by', "TEXT NOT NULL DEFAULT ''")

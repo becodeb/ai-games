@@ -1,99 +1,76 @@
 import { useMemo, useState } from 'react'
-import { PromptBlock, TextArea } from './ui.jsx'
+import PromptEditor from './PromptEditor.jsx'
 import {
   ITERATION_FIELDS,
-  ITERATION_SLOTS,
-  buildIterationFull,
-  buildIterationReadable,
-  countIterationChanges
+  ITERATION_INSTRUCTIONS,
+  ITERATION_LINES,
+  countFilled,
+  renderPrompt,
+  withInstructions
 } from '../lib/prompt.js'
 
 /**
- * Formulario de iteracion. Empuja a juntar varios cambios en un solo envio
- * en lugar de mandar un pedido por cada detalle.
+ * Pedido de mejoras, con el mismo formato de prompt-con-huecos.
+ * Empuja a juntar varios cambios en un solo envio.
  */
-export default function IterationForm({ title, version, detectedError, busy, onSubmit }) {
-  const [fields, setFields] = useState({ ...ITERATION_FIELDS })
-  const [showPrompt, setShowPrompt] = useState(false)
+export default function IterationForm({ version, busy, detectedError, onSubmit }) {
+  const [values, setValues] = useState({ ...ITERATION_FIELDS })
 
-  const set = (key) => (event) => setFields((current) => ({ ...current, [key]: event.target.value }))
-
-  const context = { title, version }
-  const changes = countIterationChanges(fields)
-  const readable = useMemo(() => buildIterationReadable(fields, context), [fields, title, version])
-  const full = useMemo(() => buildIterationFull(fields, context), [fields, title, version])
-
+  const readable = useMemo(() => renderPrompt(ITERATION_LINES, values), [values])
+  const full = useMemo(() => withInstructions(readable, ITERATION_INSTRUCTIONS), [readable])
+  const changes = countFilled(ITERATION_LINES, values)
   const canSend = changes > 0
 
+  const change = (key, value) => setValues((current) => ({ ...current, [key]: value }))
+
   function useDetectedError() {
-    setFields((current) => ({
+    setValues((current) => ({
       ...current,
-      fix: current.fix.trim()
-        ? current.fix
-        : `El juego muestra este error: "${detectedError}". Encontralo y arreglalo.`
+      fix: current.fix.trim() ? current.fix : `aparece el error "${detectedError}"`
     }))
   }
 
   function handle(send) {
     if (!canSend || busy) return
-    onSubmit({ fields, readable, full, send }, () => setFields({ ...ITERATION_FIELDS }))
+    onSubmit({ fields: values, readable, full, send }, () => setValues({ ...ITERATION_FIELDS }))
   }
 
   return (
-    <section className="iteration-form">
-      <header className="iteration-form__head">
+    <section className="compose compose--nested">
+      <div className="compose__head">
         <div>
-          <h3>Pedido de mejoras — version {version + 1}</h3>
-          <p>
-            Junta varios cambios en un solo pedido. Ideal: <strong>1 arreglo + 1 mejora visual + 1 regla nueva</strong>.
-            Cada envio ocupa el tiempo de un profe, asi que aprovechalo.
-          </p>
+          <span className="eyebrow">Version {version + 1}</span>
+          <h2>Pedí varios cambios juntos</h2>
         </div>
         <span className={`counter${changes >= 2 ? ' counter--good' : ''}`}>
           {changes} {changes === 1 ? 'cambio' : 'cambios'}
         </span>
-      </header>
+      </div>
 
       {detectedError ? (
         <div className="hint-row">
-          <span className="hint-row__text">Se detecto un error mientras jugabas: {detectedError}</span>
+          <span className="hint-row__text">Error detectado: {detectedError}</span>
           <button type="button" className="btn btn--ghost btn--sm" onClick={useDetectedError}>
-            Usarlo como arreglo
+            Usarlo
           </button>
         </div>
       ) : null}
 
-      <div className="form-grid form-grid--two">
-        {ITERATION_SLOTS.map((slot) => (
-          <TextArea
-            key={slot.key}
-            label={slot.label}
-            hint={slot.hint}
-            rows={3}
-            placeholder={slot.placeholder}
-            value={fields[slot.key]}
-            onChange={set(slot.key)}
-            maxLength={500}
-          />
-        ))}
-      </div>
+      <PromptEditor lines={ITERATION_LINES} values={values} onChange={change} size="md" />
 
-      <button type="button" className="link-button" onClick={() => setShowPrompt((value) => !value)}>
-        {showPrompt ? 'Ocultar el pedido armado' : 'Ver como queda el pedido'}
-      </button>
-
-      {showPrompt ? <PromptBlock text={readable} label={`Pedido de la version ${version + 1}`} /> : null}
-
-      <div className="actions">
-        <button type="button" className="btn" onClick={() => handle(false)} disabled={!canSend || busy}>
+      <div className="compose__actions">
+        <button type="button" className="btn btn--lg" onClick={() => handle(false)} disabled={!canSend || busy}>
           Copiar prompt
         </button>
-        <button type="button" className="btn btn--primary" onClick={() => handle(true)} disabled={!canSend || busy}>
+        <button
+          type="button"
+          className="btn btn--lg btn--primary"
+          onClick={() => handle(true)}
+          disabled={!canSend || busy}
+        >
           Enviar a los profes
         </button>
       </div>
-
-      {!canSend ? <p className="note">Escribi al menos un cambio para poder enviar.</p> : null}
     </section>
   )
 }
