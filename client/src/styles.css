@@ -1523,11 +1523,61 @@ main.container--wide {
 }
 
 .pdoc {
-  padding: 28px 30px;
+  padding: 24px 26px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
   box-shadow: var(--shadow-sm);
+}
+
+.pdoc__title {
+  margin: 0 0 24px;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-soft);
+}
+
+/* Los 3 bloques del prompt: La Orden, La Idea, El Formato.
+   Separadores sutiles, sin color: el protagonismo lo tiene el texto del prompt. */
+.pdoc__section {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.pdoc__section:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.pdoc__section-title {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.pdoc__row {
+  margin-bottom: 14px;
+}
+
+.pdoc__row:last-child {
+  margin-bottom: 0;
+}
+
+.pdoc__row .pdoc__line {
+  margin-bottom: 8px;
+}
+
+/* Selectores de un clic: Tipo de juego y Controles. */
+.pdoc__options {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 }
 
 .pdoc__line {
@@ -1547,7 +1597,7 @@ main.container--wide {
 }
 
 .pdoc__text {
-  color: var(--text-soft);
+  color: var(--text);
 }
 
 .pdoc__suggestions {
@@ -1586,6 +1636,18 @@ main.container--wide {
   background: var(--surface-hover);
   border-color: var(--border-strong);
   color: var(--text);
+}
+
+.chip--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.chip--active:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
 }
 
 /* El hueco: un textarea encima de un espejo invisible que define el tamano. */
@@ -1632,11 +1694,13 @@ main.container--wide {
 .slot__mirror {
   visibility: hidden;
   pointer-events: none;
+  font-weight: 500;
 }
 
 .slot__input {
   border: 0;
   margin: 0;
+  width: 100%;
   background: transparent;
   color: var(--text);
   font-weight: 500;
@@ -1684,6 +1748,10 @@ main.container--wide {
 }
 
 .project-card__flag--other {
+  color: var(--text-muted);
+}
+
+.project-card__flag--maker {
   color: var(--text-muted);
 }
 

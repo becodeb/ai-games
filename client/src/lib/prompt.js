@@ -1,9 +1,13 @@
 /**
- * El prompt es un documento con huecos.
+ * El prompt es un documento con huecos, organizado en 3 bloques pedagogicos:
+ * La Orden (rol + mision), La Idea (detalles creativos) y El Formato (reglas
+ * tecnicas). Cada linea puede ser:
+ * - `{ text }`: texto fijo que el alumno no puede romper.
+ * - `{ label, field }`: etiqueta + hueco editable ("Titulo: [hueco]").
+ *   Si tiene `options`, se muestran como chips seleccionables de un clic.
  *
- * Cada linea es una frase fija (que el alumno no puede romper) con uno o mas
- * huecos editables. Las lineas marcadas como `optional` desaparecen del prompt
- * final si su hueco quedo vacio, asi el texto que se copia nunca queda cojo.
+ * Las lineas marcadas como `optional` desaparecen del prompt final si su hueco
+ * quedo vacio, asi el texto que se copia nunca queda cojo.
  */
 
 export const INITIAL_FIELDS = {
@@ -25,103 +29,62 @@ export const ITERATION_FIELDS = {
   extra: ''
 }
 
-const TYPE_SUGGESTIONS = [
-  'de plataformas, saltando entre plataformas',
-  'de esquivar cosas que caen',
-  'de atrapar objetos que caen',
-  'de preguntas y respuestas',
-  'de aventura con texto y decisiones',
-  'de hacer clic para sumar puntos',
-  'de laberinto',
-  'de encontrar pares de cartas',
-  'de carreras vista desde arriba',
-  'de disparar a objetivos'
+const GAME_TYPE_OPTIONS = [
+  'esquivar obstáculos',
+  'responder preguntas',
+  'atrapar cosas',
+  'saltar entre plataformas',
+  'recorrer un laberinto',
+  'encontrar pares de cartas',
+  'correr una carrera',
+  'vivir una aventura con decisiones',
+  'hacer clic para sumar puntos',
+  'apuntar y disparar a objetivos'
 ]
 
-const CONTROL_SUGGESTIONS = [
+const CONTROL_OPTIONS = [
   'las flechas del teclado',
   'las flechas y la barra espaciadora',
   'el mouse',
   'botones grandes en la pantalla',
-  'las teclas A y D para moverse y espacio para saltar'
+  'las teclas A y D y el espacio'
+]
+
+/* --------------------------------------------------------------- bloques */
+
+/**
+ * Los 3 bloques visibles del prompt. Separadores sutiles de la interfaz, no
+ * parte del texto que se copia: ayudan a entender que a la IA hay que darle
+ * la orden, la idea y el formato.
+ */
+export const INITIAL_SECTIONS = [
+  { id: 'order', title: 'La Orden' },
+  { id: 'idea', title: 'La Idea' },
+  { id: 'format', title: 'El Formato' }
 ]
 
 /* ------------------------------------------------------------- plantillas */
 
 export const INITIAL_LINES = [
+  // La Orden: quien es la IA y que tiene que hacer.
+  { section: 'order', id: 'act', text: 'Actúa como: un creador de videojuegos experto.' },
+  { section: 'order', id: 'mission', text: 'Tu misión es: inventar un juego web divertido y fácil de jugar.' },
+  // La Idea: frases en prosa con huecos, como las escribiria una persona.
+  { section: 'idea', id: 'title', tokens: [{ text: 'El título de mi juego es ' }, { field: 'title', placeholder: 'Mi Súper Juego' }, { text: '.' }] },
+  { section: 'idea', id: 'author', optional: true, tokens: [{ text: 'Lo creó ' }, { field: 'studentName', placeholder: 'tu nombre o el del equipo' }, { text: '.' }] },
+  { section: 'idea', id: 'type', tokens: [{ text: 'Mi juego consiste en ' }, { field: 'gameType', placeholder: 'elegí una idea o escribí la tuya', options: GAME_TYPE_OPTIONS }, { text: '.' }] },
+  { section: 'idea', id: 'character', tokens: [{ text: 'El personaje principal es ' }, { field: 'character', placeholder: 'un gato espacial' }, { text: '.' }] },
+  { section: 'idea', id: 'setting', optional: true, tokens: [{ text: 'Todo pasa en ' }, { field: 'setting', placeholder: 'la Luna' }, { text: '.' }] },
+  { section: 'idea', id: 'win', tokens: [{ text: 'Se gana ' }, { field: 'winRule', placeholder: 'juntando 10 estrellas' }, { text: '.' }] },
+  { section: 'idea', id: 'lose', optional: true, tokens: [{ text: 'Se pierde ' }, { field: 'loseRule', placeholder: 'si toco un meteorito' }, { text: '.' }] },
+  { section: 'idea', id: 'controls', optional: true, tokens: [{ text: 'Se juega con ' }, { field: 'controls', placeholder: 'las flechas del teclado o un clic del mouse', options: CONTROL_OPTIONS }, { text: '.' }] },
+  { section: 'idea', id: 'extra', optional: true, tokens: [{ text: 'Además quiero que ' }, { field: 'extra', placeholder: 'haya música o sonidos al ganar', multiline: true }, { text: '.' }] },
+  // El Formato: las reglas tecnicas visibles en lenguaje natural.
   {
-    id: 'intro',
-    tokens: [
-      {
-        text:
-          'Programa un videojuego para jugar en el navegador. Tiene que ser un solo archivo con HTML, CSS y JavaScript.'
-      }
-    ]
-  },
-  {
-    id: 'title',
-    tokens: [{ text: 'El juego se llama ' }, { field: 'title', placeholder: 'el nombre que quieras' }, { text: '.' }]
-  },
-  {
-    id: 'author',
-    optional: true,
-    tokens: [{ text: 'Lo invento ' }, { field: 'studentName', placeholder: 'tu nombre o el del equipo' }, { text: '.' }]
-  },
-  {
-    id: 'type',
-    tokens: [
-      { text: 'Es un juego ' },
-      { field: 'gameType', placeholder: 'conta como se juega', suggestions: TYPE_SUGGESTIONS, grow: true },
-      { text: '.' }
-    ]
-  },
-  {
-    id: 'character',
-    tokens: [
-      { text: 'El personaje principal es ' },
-      { field: 'character', placeholder: 'quien es y como se ve', grow: true },
-      { text: '.' }
-    ]
-  },
-  {
-    id: 'setting',
-    optional: true,
-    tokens: [
-      { text: 'Todo pasa en ' },
-      { field: 'setting', placeholder: 'donde transcurre, que se ve de fondo', grow: true },
-      { text: '.' }
-    ]
-  },
-  {
-    id: 'win',
-    tokens: [{ text: 'Se gana cuando ' }, { field: 'winRule', placeholder: 'que hay que lograr', grow: true }, { text: '.' }]
-  },
-  {
-    id: 'lose',
-    optional: true,
-    tokens: [{ text: 'Se pierde cuando ' }, { field: 'loseRule', placeholder: 'que hace perder', grow: true }, { text: '.' }]
-  },
-  {
-    id: 'controls',
-    optional: true,
-    tokens: [
-      { text: 'Se juega con ' },
-      { field: 'controls', placeholder: 'como se maneja', suggestions: CONTROL_SUGGESTIONS, grow: true },
-      { text: '.' }
-    ]
-  },
-  {
-    id: 'extra',
-    optional: true,
-    tokens: [
-      { text: 'Ademas quiero que ' },
-      { field: 'extra', placeholder: 'todo lo que se te ocurra: niveles, enemigos, sonidos, power-ups...', multiline: true },
-      { text: '.' }
-    ]
-  },
-  {
-    id: 'closing',
-    tokens: [{ text: 'Que se entienda facil, que se vea lindo y que se pueda volver a jugar cuando termina.' }]
+    section: 'format',
+    id: 'code',
+    text: 'Hazlo en un solo archivo HTML para que funcione en el navegador, con colores llamativos y un botón para volver a jugar.',
+    spaced: true
   }
 ]
 
@@ -177,6 +140,7 @@ export const ITERATION_LINES = [
 /* -------------------------------------------------------------- builders */
 
 function lineFields(line) {
+  if (line.field) return [line.field]
   return line.tokens.filter((token) => token.field).map((token) => token.field)
 }
 
@@ -185,6 +149,8 @@ function lineHasContent(line, values) {
 }
 
 function renderLine(line, values) {
+  if (line.text) return line.text
+  if (line.field) return `${line.label}: ${(values[line.field] || '').trim()}`
   return line.tokens
     .map((token) => (token.field ? (values[token.field] || '').trim() : token.text))
     .join('')
@@ -195,7 +161,7 @@ function renderLine(line, values) {
 export function renderPrompt(lines, values) {
   return lines
     .filter((line) => !line.optional || lineHasContent(line, values))
-    .map((line) => renderLine(line, values))
+    .map((line) => `${line.spaced ? '\n' : ''}${renderLine(line, values)}`)
     .join('\n')
 }
 

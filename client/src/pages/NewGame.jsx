@@ -11,6 +11,7 @@ import {
   INITIAL_FIELDS,
   INITIAL_LINES,
   INITIAL_REQUIRED,
+  INITIAL_SECTIONS,
   TECHNICAL_INSTRUCTIONS,
   missingRequired,
   renderPrompt,
@@ -70,7 +71,7 @@ export default function NewGame() {
         <div className="compose__head">
           <div>
             <span className="eyebrow">Tu prompt</span>
-            <h1>Completá los huecos</h1>
+            <h1>Armá tu instrucción para la IA</h1>
           </div>
           <Link className="btn btn--ghost" to="/">
             Volver
@@ -79,6 +80,8 @@ export default function NewGame() {
 
         <PromptEditor
           lines={INITIAL_LINES}
+          sections={INITIAL_SECTIONS}
+          docTitle="Instrucción para la Inteligencia Artificial"
           values={values}
           onChange={change}
           invalid={touched ? missing : []}
