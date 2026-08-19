@@ -49,8 +49,10 @@ export default function Dashboard() {
       return byFilter && byTerm
     })
 
+    const sortedByArrival = (a, b) => (a.updatedAt < b.updatedAt ? -1 : 1)
+
     return {
-      pending: matches.filter((p) => p.status === 'pending'),
+      pending: matches.filter((p) => p.status === 'pending').sort(sortedByArrival),
       rest: matches.filter((p) => p.status !== 'pending'),
       counts: {
         all: list.length,
@@ -152,6 +154,12 @@ export default function Dashboard() {
 function ProjectCard({ project, me, highlight = false }) {
   const status = statusInfo(PROJECT_STATUS, project.status)
   const takenByOther = project.teacherName && project.teacherName !== me
+  const maker =
+    project.lastMaker === 'student'
+      ? 'La subio el alumno'
+      : project.lastMaker && project.lastMaker !== 'teacher'
+        ? `Lo hizo ${project.lastMaker}`
+        : ''
 
   return (
     <Link className={`project-card${highlight ? ' project-card--highlight' : ''}`} to={`/dashboard/${project.id}`}>
@@ -171,6 +179,8 @@ function ProjectCard({ project, me, highlight = false }) {
         <span className={`project-card__flag${takenByOther ? ' project-card__flag--other' : ''}`}>
           {takenByOther ? `Lo tiene ${project.teacherName}` : 'Lo tenes vos'}
         </span>
+      ) : maker ? (
+        <span className="project-card__flag project-card__flag--maker">{maker}</span>
       ) : null}
     </Link>
   )

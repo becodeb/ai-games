@@ -248,7 +248,7 @@ export function saveIterationCode(iterationId, parts) {
   const playable = hasPlayableCode({ html, css, js })
   const document = playable ? buildGameDocument({ html, css, js, title: project?.title }) : ''
   const timestamp = now()
-  const publishedBy = clean(parts.publishedBy, 20) || row.published_by || ''
+  const publishedBy = clean(parts.publishedBy, 80) || row.published_by || ''
 
   db.prepare(`
     UPDATE iterations
@@ -267,7 +267,12 @@ export function saveIterationCode(iterationId, parts) {
     iterationId
   )
 
-  statements.touchProject.run(timestamp, row.project_id)
+  // Al entregar el juego el proyecto queda libre: el que lo tenia ya no lo tiene tomado.
+  if (playable) {
+    db.prepare('UPDATE projects SET teacher_name = ?, updated_at = ? WHERE id = ?').run('', timestamp, row.project_id)
+  } else {
+    statements.touchProject.run(timestamp, row.project_id)
+  }
   recomputeStatus(row.project_id)
   return row.project_id
 }
@@ -284,12 +289,14 @@ export function listDashboard() {
     const iterations = statements.listIterations.all(row.id)
     const pending = iterations.filter((it) => it.status === 'pending')
     const delivered = iterations.filter((it) => it.code_document)
+    const latestDelivered = delivered[delivered.length - 1]
     return {
       ...mapProject(row),
       totalIterations: iterations.length,
       currentVersion: iterations.length ? iterations[iterations.length - 1].version : 0,
       deliveredCount: delivered.length,
       pendingVersion: pending.length ? pending[0].version : null,
+      lastMaker: latestDelivered ? latestDelivered.published_by || '' : '',
       lastPromptPreview: (iterations[iterations.length - 1]?.prompt_readable || '').slice(0, 240)
     }
   })

@@ -17,7 +17,7 @@ import {
 } from '../lib/format.js'
 import { looksLikeFullDocument, stripCodeFences } from '../lib/code.js'
 import { getTeacherName, setTeacherName } from '../lib/teacher.js'
-import { buildRestartContext, iterationCodeText, previousWithCode } from '../lib/summary.js'
+import { buildRestartContext, iterationCodeText, previousWithCode, withNewPrompt } from '../lib/summary.js'
 
 const EMPTY_CODE = { html: '', css: '', js: '' }
 
@@ -174,7 +174,7 @@ export default function DashboardProject() {
     }
     setSaving(true)
     try {
-      const data = await api.saveIterationCode(selected.id, { ...form, publishedBy: 'teacher' })
+      const data = await api.saveIterationCode(selected.id, { ...form, publishedBy: me || 'teacher' })
       setDetail(data)
       setDirty(false)
       toast('Enviado al alumno', 'ok')
@@ -366,7 +366,7 @@ export default function DashboardProject() {
                 <div className="card__head">
                   <h3>Si se corto la conversacion</h3>
                   <span className="muted">
-                    {baseIteration ? `Base: v${baseIteration.version}` : 'Sin version previa'}
+                    {baseIteration ? `Base: v${baseIteration.version}` : 'Sin version previa'} · incluye el nuevo pedido
                   </span>
                 </div>
 
@@ -376,8 +376,11 @@ export default function DashboardProject() {
                     className="btn btn--sm"
                     onClick={() =>
                       copyText(
-                        buildRestartContext(project, iterations, { upToVersion: selected.version }),
-                        'Resumen completo copiado'
+                        buildRestartContext(project, iterations, {
+                          upToVersion: selected.version,
+                          newPrompt: selected.promptFull
+                        }),
+                        'Resumen completo + nuevo pedido copiado'
                       )
                     }
                   >
@@ -390,9 +393,10 @@ export default function DashboardProject() {
                       copyText(
                         buildRestartContext(project, iterations, {
                           upToVersion: selected.version,
-                          includeCode: false
+                          includeCode: false,
+                          newPrompt: selected.promptFull
                         }),
-                        'Historial de pedidos copiado'
+                        'Historial + nuevo pedido copiado'
                       )
                     }
                   >
@@ -402,7 +406,12 @@ export default function DashboardProject() {
                     <button
                       type="button"
                       className="btn btn--sm"
-                      onClick={() => copyText(iterationCodeText(baseIteration), `Codigo v${baseIteration.version} copiado`)}
+                      onClick={() =>
+                        copyText(
+                          withNewPrompt(iterationCodeText(baseIteration), selected.promptFull),
+                          `Codigo v${baseIteration.version} + nuevo pedido copiado`
+                        )
+                      }
                     >
                       Copiar codigo v{baseIteration.version}
                     </button>
@@ -435,7 +444,11 @@ export default function DashboardProject() {
                   <div className="card__head">
                     <h3>Version publicada</h3>
                     <div className="card__head-actions">
-                      {selected.publishedBy === 'student' ? <Badge>La subio el alumno</Badge> : null}
+                      {selected.publishedBy === 'student' ? (
+                        <Badge>La subio el alumno</Badge>
+                      ) : selected.publishedBy && selected.publishedBy !== 'teacher' ? (
+                        <Badge>Lo hizo {selected.publishedBy}</Badge>
+                      ) : null}
                       <a className="btn btn--ghost btn--sm" href={downloadUrl(selected.id)} download>
                         Descargar HTML
                       </a>

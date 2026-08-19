@@ -31,11 +31,12 @@ function codeOf(iteration) {
 /**
  * @param {{title: string, studentName?: string}} project
  * @param {Array} iterations
- * @param {{upToVersion?: number, includeCode?: boolean}} options
+ * @param {{upToVersion?: number, includeCode?: boolean, newPrompt?: string}} options
  */
 export function buildRestartContext(project, iterations, options = {}) {
   const upTo = options.upToVersion ?? Infinity
   const includeCode = options.includeCode !== false
+  const newPrompt = options.newPrompt || ''
 
   const history = iterations
     .filter((it) => it.version <= upTo)
@@ -66,7 +67,16 @@ export function buildRestartContext(project, iterations, options = {}) {
     )
   }
 
-  return parts.join('\n')
+  const text = parts.join('\n')
+  return newPrompt ? withNewPrompt(text, newPrompt) : text
+}
+
+/**
+ * Agrega el nuevo pedido al final del contexto, para que con un solo
+ * copiar y pegar quede todo junto en una conversacion nueva.
+ */
+export function withNewPrompt(text, promptFull) {
+  return `${text}\n\nEste es el nuevo pedido:\n\n${promptFull}`
 }
 
 export function iterationCodeText(iteration) {
