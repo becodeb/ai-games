@@ -3,7 +3,7 @@ import Layout from '../components/Layout.jsx'
 import Modal from '../components/Modal.jsx'
 import GameFrame from '../components/GameFrame.jsx'
 import { EmptyState, SectionTitle, Spinner } from '../components/ui.jsx'
-import { api } from '../lib/api.js'
+import { api, playUrl } from '../lib/api.js'
 import { subscribe } from '../lib/socket.js'
 import { relativeTime } from '../lib/format.js'
 
@@ -63,8 +63,15 @@ export default function Gallery() {
       <div className="gallery-grid">
         {filtered.map((game) => (
           <button key={game.iterationId} type="button" className="gallery-card" onClick={() => setActive(game)}>
-            <span className="gallery-card__tile" aria-hidden="true">
-              {initials(game.title)}
+            <span className="gallery-card__preview" aria-hidden="true">
+              <iframe
+                className="gallery-card__frame"
+                title={`Preview de ${game.title}`}
+                src={playUrl(game.iterationId)}
+                sandbox="allow-scripts"
+                loading="lazy"
+                tabIndex={-1}
+              />
             </span>
             <span className="gallery-card__body">
               <span className="gallery-card__title">{game.title}</span>
@@ -107,13 +114,4 @@ export default function Gallery() {
       </Modal>
     </Layout>
   )
-}
-
-function initials(title) {
-  return String(title || '?')
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0].toUpperCase())
-    .join('')
 }
