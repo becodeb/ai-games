@@ -1237,6 +1237,31 @@ main.container--wide {
   letter-spacing: 0.04em;
 }
 
+.gallery-card__preview {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: #fff;
+  overflow: hidden;
+}
+
+.gallery-card__preview::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.gallery-card__frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
 .gallery-card__body {
   display: flex;
   flex-direction: column;
