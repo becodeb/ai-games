@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import ThemeToggle from './ThemeToggle.jsx'
 
 export function Brand({ to = '/' }) {
   return (
@@ -17,7 +18,10 @@ export default function Layout({ children, actions, brandTo, wide = false }) {
       <header className="topbar">
         <div className={`topbar__inner${wide ? ' container--wide' : ' container'}`}>
           <Brand to={brandTo} />
-          <div className="topbar__actions">{actions}</div>
+          <div className="topbar__actions">
+            {actions}
+            <ThemeToggle />
+          </div>
         </div>
       </header>
       <main className={wide ? 'container--wide' : 'container'}>{children}</main>

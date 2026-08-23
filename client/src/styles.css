@@ -1,10 +1,17 @@
 /* ==========================================================================
-   STEAMLAB — sistema visual minimo
-   Tokens en :root, dark mode por prefers-color-scheme.
+   STEAMLAB — sistema visual "Laboratorio"
+
+   Nace oscuro. El tema claro es la misma identidad con los planos invertidos:
+   mismos dos acentos, mismo relieve de tecla, mismas etiquetas en mono.
+
+   Dos familias de color que NO son lo mismo:
+   - relleno (--accent, --warn, --danger): siempre vivo, aguanta texto oscuro
+     encima en los dos temas.
+   - tinta (--accent-ink, --info-ink, ...): el mismo color pero legible COMO
+     TEXTO. En oscuro coincide con el relleno; en claro se oscurece, porque
+     lima sobre blanco no se lee.
    ========================================================================== */
 
-/* Direccion "Laboratorio": oscuro por conviccion, sin variante clara.
-   Lima = accion y confirmacion. Cian = foco y atencion. Nada mas. */
 :root {
   color-scheme: dark;
 
@@ -46,6 +53,7 @@
   /* Relieve de tecla: canto inferior hundido. Es la firma de la interfaz. */
   --key-edge: inset 0 -2px 0 oklch(0.20 0.012 250);
   --key-edge-accent: inset 0 -2px 0 var(--accent-deep);
+  --key-edge-pressed: inset 0 -1px 0 oklch(0.20 0.012 250);
 
   --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
   --shadow: 0 10px 28px -14px oklch(0 0 0 / 0.75);
@@ -56,6 +64,76 @@
   --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
   --header-h: 60px;
+
+  /* En oscuro la tinta es el mismo color que el relleno. */
+  --accent-ink: var(--accent);
+  --info-ink: var(--info);
+  --ok-ink: var(--ok);
+  --warn-ink: var(--warn);
+  --danger-ink: var(--danger);
+
+  --grid-line: oklch(1 0 0 / 0.022);
+}
+
+/* --------------------------------------------------------------- tema claro
+
+   Se activa solo con el interruptor (data-theme="light"): la app abre oscura
+   siempre, porque esa es la direccion. El claro existe para aulas con
+   proyector o mucha luz.
+   -------------------------------------------------------------------------- */
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  --bg: oklch(0.975 0.005 250);
+  --bg-subtle: oklch(0.99 0.003 250);
+  --bg-sunken: oklch(0.945 0.007 250);
+  --surface: oklch(1 0 0);
+  /* Un poco mas hundido que la tarjeta: si no, la tecla sin elegir desaparece. */
+  --surface-hover: oklch(0.952 0.007 250);
+  --surface-raised: oklch(0.92 0.009 250);
+  --border: oklch(0.9 0.008 250);
+  --border-strong: oklch(0.8 0.012 250);
+  --text: oklch(0.24 0.015 250);
+  --text-soft: oklch(0.42 0.015 250);
+  /* Sobre fondo claro el gris tiene que bajar mas para pasar 4.5:1. */
+  --text-muted: oklch(0.5 0.015 250);
+
+  /* El relleno sigue siendo lima: la tecla elegida se ve igual en los dos temas. */
+  --accent: oklch(0.82 0.19 130);
+  --accent-deep: oklch(0.66 0.16 130);
+  --accent-text: oklch(0.2 0.015 250);
+  --accent-soft: oklch(0.82 0.19 130 / 0.22);
+  --accent-ink: oklch(0.48 0.14 135);
+
+  --info: oklch(0.55 0.17 245);
+  --info-bg: oklch(0.55 0.17 245 / 0.1);
+  --info-border: oklch(0.55 0.17 245 / 0.45);
+  --info-ink: oklch(0.47 0.17 245);
+
+  --ok: oklch(0.82 0.19 130);
+  --ok-bg: oklch(0.55 0.15 140 / 0.12);
+  --ok-border: oklch(0.55 0.15 140 / 0.4);
+  --ok-ink: oklch(0.44 0.13 140);
+
+  --warn: oklch(0.8 0.15 78);
+  --warn-bg: oklch(0.75 0.14 70 / 0.16);
+  --warn-border: oklch(0.65 0.13 70 / 0.45);
+  --warn-ink: oklch(0.47 0.11 65);
+
+  --danger: oklch(0.62 0.2 25);
+  --danger-bg: oklch(0.62 0.2 25 / 0.1);
+  --danger-border: oklch(0.62 0.2 25 / 0.4);
+  --danger-ink: oklch(0.5 0.18 25);
+
+  --key-edge: inset 0 -2px 0 oklch(0.86 0.012 250);
+  --key-edge-pressed: inset 0 -1px 0 oklch(0.86 0.012 250);
+  --shadow-sm: 0 1px 2px oklch(0.2 0.02 250 / 0.06);
+  --shadow: 0 10px 28px -14px oklch(0.2 0.02 250 / 0.22);
+  --shadow-lg: 0 28px 70px -28px oklch(0.2 0.02 250 / 0.3);
+  --glow: 0 0 18px -8px oklch(0.75 0.18 130 / 0.7);
+
+  --grid-line: oklch(0.2 0.02 250 / 0.05);
 }
 
 *,
@@ -75,8 +153,8 @@ body {
   background: var(--bg);
   /* Papel cuadriculado de laboratorio: da profundidad sin robar atencion. */
   background-image:
-    linear-gradient(oklch(1 0 0 / 0.022) 1px, transparent 1px),
-    linear-gradient(90deg, oklch(1 0 0 / 0.022) 1px, transparent 1px);
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
   background-size: 32px 32px;
   background-attachment: fixed;
   color: var(--text);
@@ -251,7 +329,7 @@ main.container--wide {
 
 .btn:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
+  box-shadow: var(--key-edge-pressed);
 }
 
 .btn:disabled {
@@ -341,7 +419,7 @@ main.container--wide {
 .eyebrow {
   display: inline-block;
   margin-bottom: 10px;
-  color: var(--accent);
+  color: var(--accent-ink);
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 400;
@@ -367,7 +445,7 @@ main.container--wide {
 }
 
 .note--warn {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .alert {
@@ -380,7 +458,7 @@ main.container--wide {
 .alert--error {
   background: var(--danger-bg);
   border: 1px solid var(--danger-border);
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .section-title {
@@ -418,7 +496,7 @@ main.container--wide {
 }
 
 .group-title--warn {
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 /* ------------------------------------------------------------------ hero */
@@ -513,7 +591,7 @@ main.container--wide {
 }
 
 .field__required {
-  color: var(--danger);
+  color: var(--danger-ink);
 }
 
 .field__hint {
@@ -637,19 +715,19 @@ main.container--wide {
 .badge--warn {
   background: var(--warn-bg);
   border-color: var(--warn-border);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .badge--ok {
   background: var(--ok-bg);
   border-color: var(--ok-border);
-  color: var(--ok);
+  color: var(--ok-ink);
 }
 
 .badge--info {
   background: var(--info-bg);
   border-color: var(--info-border);
-  color: var(--info);
+  color: var(--info-ink);
 }
 
 /* -------------------------------------------------------- paneles/cards */
@@ -826,7 +904,7 @@ main.container--wide {
   box-shadow: var(--key-edge);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--accent);
+  color: var(--accent-ink);
   z-index: 1;
 }
 
@@ -845,7 +923,7 @@ main.container--wide {
   border: 1px solid var(--warn-border);
   border-radius: var(--radius-lg);
   background: var(--warn-bg);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .waiting p {
@@ -924,7 +1002,7 @@ main.container--wide {
 .counter--good {
   background: var(--ok-bg);
   border-color: var(--ok-border);
-  color: var(--ok);
+  color: var(--ok-ink);
 }
 
 .hint-row {
@@ -940,7 +1018,7 @@ main.container--wide {
 }
 
 .hint-row__text {
-  color: var(--danger);
+  color: var(--danger-ink);
   font-size: 13px;
   word-break: break-word;
 }
@@ -1006,7 +1084,7 @@ main.container--wide {
   padding: 10px 14px;
   border-top: 1px solid var(--danger-border);
   background: var(--danger-bg);
-  color: var(--danger);
+  color: var(--danger-ink);
   font-size: 12.5px;
   font-family: var(--font-mono);
   word-break: break-word;
@@ -1138,7 +1216,7 @@ main.container--wide {
 
 .project-card__flag {
   align-self: flex-start;
-  color: var(--warn);
+  color: var(--warn-ink);
   font-size: 12px;
   font-weight: 500;
 }
@@ -1185,7 +1263,7 @@ main.container--wide {
   border-radius: var(--radius-sm);
   background: var(--surface-hover);
   box-shadow: var(--key-edge);
-  color: oklch(0.9 0.006 250);
+  color: var(--text);
   font: inherit;
   font-family: var(--font-mono);
   font-size: 12px;
@@ -1203,7 +1281,7 @@ main.container--wide {
 
 .version-chip:active {
   transform: translateY(1px);
-  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
+  box-shadow: var(--key-edge-pressed);
 }
 
 .version-chip--active,
@@ -1218,7 +1296,7 @@ main.container--wide {
 
 .version-chip--pending {
   border-color: var(--warn-border);
-  color: var(--warn);
+  color: var(--warn-ink);
 }
 
 .version-chip--pending.version-chip--active,
@@ -1653,7 +1731,7 @@ main.container--wide {
   font-weight: 500;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--accent);
+  color: var(--accent-ink);
 }
 
 .pdoc__section-title::before {
@@ -1669,7 +1747,7 @@ main.container--wide {
 }
 
 .pdoc__section:nth-of-type(2) .pdoc__section-title {
-  color: var(--info);
+  color: var(--info-ink);
 }
 
 .pdoc__section:nth-of-type(3) .pdoc__section-title {
@@ -1747,7 +1825,7 @@ main.container--wide {
   border-radius: var(--radius-sm);
   background: var(--surface-hover);
   box-shadow: var(--key-edge);
-  color: oklch(0.9 0.006 250);
+  color: var(--text);
   font: inherit;
   font-size: 13.5px;
   font-weight: 500;
@@ -1766,7 +1844,7 @@ main.container--wide {
 
 .chip:active {
   transform: translateY(1px);
-  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
+  box-shadow: var(--key-edge-pressed);
 }
 
 .chip--active,
@@ -1789,7 +1867,7 @@ main.container--wide {
   display: inline-grid;
   vertical-align: baseline;
   max-width: 100%;
-  border-bottom: 2px dashed oklch(0.42 0.018 250);
+  border-bottom: 2px dashed var(--border-strong);
   border-radius: 4px 4px 0 0;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }

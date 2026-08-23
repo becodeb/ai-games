@@ -16,6 +16,15 @@
     />
   </head>
   <body>
+    <script>
+      // Antes de pintar, para que no parpadee el tema equivocado al recargar.
+      try {
+        var t = localStorage.getItem('steamlab:theme');
+        document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
