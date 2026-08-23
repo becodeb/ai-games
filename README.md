@@ -20,6 +20,24 @@ Aplicacion web para un taller escolar donde los chicos escriben el *prompt*, un 
 - **Backend:** Node.js 22 + Express + Socket.io
 - **Base de datos:** SQLite (better-sqlite3), con WAL activado
 - **Frontend:** React 18 + Vite + React Router, CSS propio (sin frameworks de UI)
+
+### El sistema visual: "Laboratorio"
+
+Oscuro por conviccion, sin variante clara: la idea es que el chico sienta que esta adentro de una consola
+y no de un formulario. Todo sale de los tokens de `client/src/styles.css`:
+
+- **Dos acentos y nada mas.** Lima (`--accent`) para accion y confirmacion, cian (`--info`) para foco y
+  atencion. Comparten luminosidad y croma, solo cambia el tono, asi nunca compiten.
+- **Todo lo que se aprieta es una tecla.** Botones, selectores de idea, chips de version y marcadores
+  comparten el mismo relieve (`--key-edge`): cuerpo propio, borde definido y canto inferior hundido. Sin
+  elegir ya se ve pulsable; elegido se prende en lima solida con tilde.
+- **Mono para las etiquetas** (`--font-mono`), texto normal para el contenido: los titulos de seccion van
+  numerados (`01 · La Orden`) para que el prompt se lea como un procedimiento.
+- **Movimiento solo al montar.** Las unicas animaciones continuas son el barrido del encabezado del prompt
+  y el latido del boton de enviar. Todo respeta `prefers-reduced-motion`.
+- **El juego siempre sobre blanco.** El `iframe` del juego es contenido del alumno, no interfaz nuestra.
+
+Fuentes: Space Grotesk y JetBrains Mono desde Google Fonts, con stacks de respaldo si no hay internet.
 - **Deploy:** Docker multi-stage, un unico contenedor
 
 Las iteraciones se guardan de forma incremental (`version 1`, `version 2`, …). Nada se sobreescribe: cada

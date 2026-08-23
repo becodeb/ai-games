@@ -52,16 +52,21 @@ export default function PromptEditor({ lines, values, onChange, invalid = [], si
                       {line.tokens
                         .filter((token) => token.options?.length)
                         .map((token) =>
-                          token.options.map((option) => (
-                            <button
-                              type="button"
-                              key={option}
-                              className={`chip${(values[token.field] || '') === option ? ' chip--active' : ''}`}
-                              onClick={() => onChange(token.field, (values[token.field] || '') === option ? '' : option)}
-                            >
-                              {option}
-                            </button>
-                          ))
+                          token.options.map((option) => {
+                            const active = (values[token.field] || '') === option
+                            return (
+                              <button
+                                type="button"
+                                key={option}
+                                className={`chip${active ? ' chip--active' : ''}`}
+                                aria-pressed={active}
+                                onClick={() => onChange(token.field, active ? '' : option)}
+                              >
+                                {active ? <CheckIcon /> : null}
+                                {option}
+                              </button>
+                            )
+                          })
                         )}
                     </div>
                   ) : null}
@@ -72,6 +77,21 @@ export default function PromptEditor({ lines, values, onChange, invalid = [], si
         </section>
       ))}
     </div>
+  )
+}
+
+function CheckIcon() {
+  return (
+    <svg className="chip__check" width="13" height="13" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        d="M3 8.5l3.2 3.2L13 5"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.4"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
   )
 }
 

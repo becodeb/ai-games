@@ -3,75 +3,59 @@
    Tokens en :root, dark mode por prefers-color-scheme.
    ========================================================================== */
 
+/* Direccion "Laboratorio": oscuro por conviccion, sin variante clara.
+   Lima = accion y confirmacion. Cian = foco y atencion. Nada mas. */
 :root {
-  --bg: #ffffff;
-  --bg-subtle: #fafafa;
-  --bg-sunken: #f4f4f5;
-  --surface: #ffffff;
-  --surface-hover: #f7f7f8;
-  --border: #e6e6e8;
-  --border-strong: #d4d4d8;
-  --text: #09090b;
-  --text-soft: #52525b;
-  --text-muted: #8a8a94;
-  --accent: #09090b;
-  --accent-text: #ffffff;
-  --warn: #b45309;
-  --warn-bg: #fef6e7;
-  --warn-border: #f2d9a8;
-  --ok: #15803d;
-  --ok-bg: #eefaf1;
-  --ok-border: #bfe6cc;
-  --info: #1d4ed8;
-  --info-bg: #eef2ff;
-  --info-border: #c9d5fb;
-  --danger: #b91c1c;
-  --danger-bg: #fef2f2;
-  --danger-border: #f5cccc;
+  color-scheme: dark;
 
-  --radius-sm: 6px;
-  --radius: 10px;
-  --radius-lg: 14px;
-  --shadow-sm: 0 1px 2px rgba(9, 9, 11, 0.05);
-  --shadow: 0 8px 24px -12px rgba(9, 9, 11, 0.18);
-  --shadow-lg: 0 24px 64px -24px rgba(9, 9, 11, 0.32);
+  --bg: oklch(0.17 0.012 250);
+  --bg-subtle: oklch(0.19 0.013 250);
+  --bg-sunken: oklch(0.235 0.015 250);
+  --surface: oklch(0.21 0.014 250);
+  --surface-hover: oklch(0.265 0.015 250);
+  --surface-raised: oklch(0.30 0.016 250);
+  --border: oklch(0.30 0.016 250);
+  --border-strong: oklch(0.37 0.016 250);
+  --text: oklch(0.96 0.005 250);
+  --text-soft: oklch(0.78 0.01 250);
+  --text-muted: oklch(0.66 0.012 250);
 
-  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  /* Los dos acentos comparten luminosidad y croma: solo cambia el tono. */
+  --accent: oklch(0.85 0.19 130);
+  --accent-deep: oklch(0.70 0.17 130);
+  --accent-text: oklch(0.17 0.012 250);
+  --accent-soft: oklch(0.85 0.19 130 / 0.14);
+  --info: oklch(0.85 0.19 215);
+  --info-bg: oklch(0.85 0.19 215 / 0.12);
+  --info-border: oklch(0.85 0.19 215 / 0.45);
+
+  --ok: oklch(0.85 0.19 130);
+  --ok-bg: oklch(0.85 0.19 130 / 0.12);
+  --ok-border: oklch(0.85 0.19 130 / 0.45);
+  --warn: oklch(0.83 0.16 78);
+  --warn-bg: oklch(0.83 0.16 78 / 0.12);
+  --warn-border: oklch(0.83 0.16 78 / 0.42);
+  --danger: oklch(0.72 0.19 25);
+  --danger-bg: oklch(0.72 0.19 25 / 0.13);
+  --danger-border: oklch(0.72 0.19 25 / 0.45);
+
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 16px;
+
+  /* Relieve de tecla: canto inferior hundido. Es la firma de la interfaz. */
+  --key-edge: inset 0 -2px 0 oklch(0.20 0.012 250);
+  --key-edge-accent: inset 0 -2px 0 var(--accent-deep);
+
+  --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.4);
+  --shadow: 0 10px 28px -14px oklch(0 0 0 / 0.75);
+  --shadow-lg: 0 28px 70px -28px oklch(0 0 0 / 0.9);
+  --glow: 0 0 20px -6px oklch(0.85 0.19 130 / 0.75);
+
+  --font: 'Space Grotesk', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
 
   --header-h: 60px;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #08080a;
-    --bg-subtle: #0c0c0f;
-    --bg-sunken: #121216;
-    --surface: #0f0f12;
-    --surface-hover: #16161b;
-    --border: #232329;
-    --border-strong: #34343c;
-    --text: #fafafa;
-    --text-soft: #a1a1aa;
-    --text-muted: #71717a;
-    --accent: #fafafa;
-    --accent-text: #09090b;
-    --warn: #fbbf24;
-    --warn-bg: #241c07;
-    --warn-border: #46360d;
-    --ok: #4ade80;
-    --ok-bg: #06210f;
-    --ok-border: #12401f;
-    --info: #93b4fd;
-    --info-bg: #0d1530;
-    --info-border: #1e2c56;
-    --danger: #f87171;
-    --danger-bg: #250d0d;
-    --danger-border: #451a1a;
-    --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-    --shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.7);
-    --shadow-lg: 0 24px 64px -24px rgba(0, 0, 0, 0.85);
-  }
 }
 
 *,
@@ -89,6 +73,12 @@ body,
 body {
   margin: 0;
   background: var(--bg);
+  /* Papel cuadriculado de laboratorio: da profundidad sin robar atencion. */
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.022) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-attachment: fixed;
   color: var(--text);
   font-family: var(--font);
   font-size: 15px;
@@ -229,60 +219,81 @@ main.container--wide {
 
 /* --------------------------------------------------------------- botones */
 
+/* Todo lo que se aprieta es una tecla: cuerpo propio y canto inferior hundido. */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 7px;
-  height: 36px;
-  padding: 0 14px;
+  height: 38px;
+  padding: 0 15px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--surface);
+  background: var(--surface-hover);
+  box-shadow: var(--key-edge);
   color: var(--text);
   font: inherit;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
-  transition: background 0.14s ease, border-color 0.14s ease, opacity 0.14s ease, transform 0.14s ease;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, opacity 0.16s ease,
+    transform 0.16s ease, box-shadow 0.16s ease;
 }
 
 .btn:hover:not(:disabled) {
-  background: var(--surface-hover);
-  border-color: var(--text-muted);
+  background: var(--surface-raised);
+  border-color: var(--info-border);
+  color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--key-edge), 0 4px 12px -6px oklch(0.85 0.19 215 / 0.5);
 }
 
 .btn:active:not(:disabled) {
   transform: translateY(1px);
+  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
 }
 
 .btn:disabled {
-  opacity: 0.45;
+  opacity: 0.4;
   cursor: not-allowed;
+  box-shadow: none;
 }
 
 .btn--primary {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: var(--key-edge-accent), var(--glow);
   color: var(--accent-text);
+  font-weight: 700;
 }
 
 .btn--primary:hover:not(:disabled) {
-  background: color-mix(in srgb, var(--accent) 86%, var(--bg));
-  border-color: color-mix(in srgb, var(--accent) 86%, var(--bg));
+  background: oklch(0.89 0.19 130);
+  border-color: oklch(0.89 0.19 130);
+  box-shadow: var(--key-edge-accent), 0 0 26px -6px oklch(0.85 0.19 130 / 0.9);
+}
+
+.btn--primary:active:not(:disabled) {
+  box-shadow: inset 0 -1px 0 var(--accent-deep);
 }
 
 .btn--ghost {
   background: transparent;
   border-color: transparent;
+  box-shadow: none;
   color: var(--text-soft);
 }
 
 .btn--ghost:hover:not(:disabled) {
-  background: var(--bg-sunken);
+  background: var(--surface-hover);
   border-color: transparent;
+  box-shadow: none;
   color: var(--text);
+}
+
+.btn--ghost:active:not(:disabled) {
+  box-shadow: none;
 }
 
 .btn--sm {
@@ -326,14 +337,21 @@ main.container--wide {
 
 /* ------------------------------------------------------------ tipografia */
 
+/* Anotacion de laboratorio: mono, lima y prefijo de comentario. */
 .eyebrow {
   display: inline-block;
-  margin-bottom: 8px;
-  color: var(--text-muted);
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-family: var(--font-mono);
   font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
+  font-weight: 400;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.eyebrow::before {
+  content: '// ';
+  opacity: 0.6;
 }
 
 .muted {
@@ -447,8 +465,8 @@ main.container--wide {
 }
 
 .choice:hover {
-  border-color: var(--border-strong);
-  box-shadow: var(--shadow);
+  border-color: var(--info-border);
+  box-shadow: var(--shadow), 0 0 0 1px oklch(0.85 0.19 215 / 0.15);
   transform: translateY(-2px);
 }
 
@@ -522,8 +540,8 @@ main.container--wide {
 
 .input:focus {
   outline: none;
-  border-color: var(--text-soft);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--text-soft) 14%, transparent);
+  border-color: var(--info);
+  box-shadow: 0 0 0 3px oklch(0.85 0.19 215 / 0.16);
 }
 
 .input[aria-invalid='true'] {
@@ -602,14 +620,17 @@ main.container--wide {
 .badge {
   display: inline-flex;
   align-items: center;
-  height: 22px;
-  padding: 0 8px;
-  border-radius: 999px;
+  height: 23px;
+  padding: 0 9px;
+  border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg-sunken);
   color: var(--text-soft);
-  font-size: 12px;
+  font-family: var(--font-mono);
+  font-size: 10.5px;
   font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -798,13 +819,14 @@ main.container--wide {
   align-items: center;
   justify-content: center;
   width: 44px;
-  height: 30px;
+  height: 32px;
   border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  box-shadow: var(--key-edge);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--text-soft);
+  color: var(--accent);
   z-index: 1;
 }
 
@@ -890,7 +912,8 @@ main.container--wide {
   height: 26px;
   padding: 0 10px;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: 6px;
+  font-family: var(--font-mono);
   background: var(--bg-sunken);
   color: var(--text-muted);
   font-size: 12px;
@@ -954,6 +977,7 @@ main.container--wide {
   align-items: center;
 }
 
+/* El juego siempre sobre blanco: es contenido del alumno, no interfaz nuestra. */
 .game__stage {
   position: relative;
   width: 100%;
@@ -1029,9 +1053,9 @@ main.container--wide {
 }
 
 .tab--active {
-  background: var(--surface);
+  background: var(--surface-hover);
   color: var(--text);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--key-edge);
 }
 
 .tab__count {
@@ -1154,38 +1178,55 @@ main.container--wide {
 }
 
 .version-chip {
-  height: 30px;
-  min-width: 40px;
-  padding: 0 10px;
+  height: 32px;
+  min-width: 42px;
+  padding: 0 11px;
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text-soft);
+  background: var(--surface-hover);
+  box-shadow: var(--key-edge);
+  color: oklch(0.9 0.006 250);
   font: inherit;
   font-family: var(--font-mono);
   font-size: 12px;
   cursor: pointer;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .version-chip:hover {
-  background: var(--surface-hover);
+  background: var(--surface-raised);
+  border-color: var(--info-border);
+  color: var(--text);
+  transform: translateY(-1px);
 }
 
-.version-chip--active {
+.version-chip:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
+}
+
+.version-chip--active,
+.version-chip--active:hover {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: var(--key-edge-accent), var(--glow);
   color: var(--accent-text);
+  font-weight: 500;
+  transform: none;
 }
 
 .version-chip--pending {
-  border-color: var(--warn);
+  border-color: var(--warn-border);
   color: var(--warn);
 }
 
-.version-chip--pending.version-chip--active {
+.version-chip--pending.version-chip--active,
+.version-chip--pending.version-chip--active:hover {
   background: var(--warn);
   border-color: var(--warn);
-  color: #fff;
+  box-shadow: inset 0 -2px 0 oklch(0.68 0.14 78), 0 0 20px -6px oklch(0.83 0.16 78 / 0.75);
+  color: var(--accent-text);
 }
 
 .code-grid {
@@ -1229,7 +1270,7 @@ main.container--wide {
   justify-content: center;
   aspect-ratio: 16 / 10;
   border-radius: var(--radius);
-  background: linear-gradient(140deg, var(--bg-sunken), var(--surface-hover));
+  background: var(--bg-sunken);
   border: 1px solid var(--border);
   color: var(--text-muted);
   font-family: var(--font-mono);
@@ -1341,7 +1382,7 @@ main.container--wide {
   align-items: center;
   justify-content: center;
   padding: 24px;
-  background: rgba(9, 9, 11, 0.5);
+  background: oklch(0.1 0.01 250 / 0.72);
   backdrop-filter: blur(3px);
   animation: fade 0.14s ease;
 }
@@ -1422,7 +1463,7 @@ main.container--wide {
   color: inherit;
   text-align: left;
   cursor: pointer;
-  transition: background 0.14s ease, border-color 0.14s ease;
+  transition: background-color 0.14s ease, border-color 0.14s ease;
 }
 
 .project-row:hover {
@@ -1463,15 +1504,15 @@ main.container--wide {
 
 .toast {
   pointer-events: auto;
-  padding: 10px 16px;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
+  padding: 11px 17px;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
   background: var(--accent);
   color: var(--accent-text);
   font: inherit;
   font-size: 13.5px;
-  font-weight: 500;
-  box-shadow: var(--shadow);
+  font-weight: 700;
+  box-shadow: var(--key-edge-accent), var(--shadow), var(--glow);
   cursor: pointer;
   animation: rise 0.18s ease;
 }
@@ -1484,13 +1525,14 @@ main.container--wide {
 .toast--ok {
   background: var(--ok);
   border-color: var(--ok);
-  color: #fff;
+  color: var(--accent-text);
 }
 
 .toast--error {
   background: var(--danger);
   border-color: var(--danger);
-  color: #fff;
+  box-shadow: inset 0 -2px 0 oklch(0.55 0.17 25), var(--shadow);
+  color: oklch(0.99 0 0);
 }
 
 /* -------------------------------------------------------------- spinner */
@@ -1506,7 +1548,7 @@ main.container--wide {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--text-muted);
+  background: var(--accent);
   animation: bounce 1s ease-in-out infinite;
 }
 
@@ -1552,14 +1594,38 @@ main.container--wide {
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  box-shadow: var(--shadow-sm);
+  box-shadow: var(--shadow);
+  counter-reset: pdoc-section;
+  overflow: hidden;
 }
 
+/* El titulo se vuelve la barra del documento, con un barrido de escaner. */
 .pdoc__title {
-  margin: 0 0 24px;
-  font-size: 15px;
-  font-weight: 500;
+  position: relative;
+  margin: -24px -26px 24px;
+  padding: 13px 22px;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-sunken);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
   color: var(--text-soft);
+}
+
+.pdoc__title::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 28%;
+  background: linear-gradient(90deg, transparent, oklch(0.85 0.19 130 / 0.16), transparent);
+  animation: lab-scan 4.5s ease-in-out infinite;
+}
+
+@keyframes lab-scan {
+  0% { transform: translateX(-100%); }
+  55%, 100% { transform: translateX(360%); }
 }
 
 /* Los 3 bloques del prompt: La Orden, La Idea, El Formato.
@@ -1576,12 +1642,37 @@ main.container--wide {
   border-top: 0;
 }
 
+/* Numerados y en mono: el prompt se lee como un procedimiento, no como un form. */
 .pdoc__section-title {
-  margin: 0 0 10px;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--accent);
+}
+
+.pdoc__section-title::before {
+  counter-increment: pdoc-section;
+  content: counter(pdoc-section, decimal-leading-zero) ' ·';
+}
+
+.pdoc__section-title::after {
+  content: '';
+  flex-grow: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.pdoc__section:nth-of-type(2) .pdoc__section-title {
+  color: var(--info);
+}
+
+.pdoc__section:nth-of-type(3) .pdoc__section-title {
   color: var(--text-muted);
 }
 
@@ -1644,35 +1735,53 @@ main.container--wide {
   margin-right: 2px;
 }
 
+/* Selector de idea. Sin elegir ya tiene cuerpo, para que invite a tocarlo;
+   elegido se prende en lima solida con tilde, que es lo que mas contrasta. */
 .chip {
-  height: 28px;
-  padding: 0 11px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--bg-sunken);
-  color: var(--text-soft);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 34px;
+  padding: 0 15px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-hover);
+  box-shadow: var(--key-edge);
+  color: oklch(0.9 0.006 250);
   font: inherit;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.14s ease, color 0.14s ease, border-color 0.14s ease;
+  transition: background-color 0.16s ease, color 0.16s ease, border-color 0.16s ease, transform 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .chip:hover {
-  background: var(--surface-hover);
-  border-color: var(--border-strong);
+  background: var(--surface-raised);
+  border-color: var(--info-border);
   color: var(--text);
+  transform: translateY(-1px);
+  box-shadow: var(--key-edge), 0 4px 12px -6px oklch(0.85 0.19 215 / 0.5);
 }
 
-.chip--active {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: var(--accent-text);
+.chip:active {
+  transform: translateY(1px);
+  box-shadow: inset 0 -1px 0 oklch(0.20 0.012 250);
 }
 
+.chip--active,
 .chip--active:hover {
   background: var(--accent);
   border-color: var(--accent);
+  box-shadow: var(--key-edge-accent), var(--glow);
   color: var(--accent-text);
+  font-weight: 700;
+  transform: none;
+}
+
+.chip__check {
+  flex: none;
+  margin-left: -2px;
 }
 
 /* El hueco: un textarea encima de un espejo invisible que define el tamano. */
@@ -1680,9 +1789,9 @@ main.container--wide {
   display: inline-grid;
   vertical-align: baseline;
   max-width: 100%;
-  border-bottom: 2px solid var(--border-strong);
-  border-radius: 2px 2px 0 0;
-  transition: border-color 0.14s ease, background 0.14s ease;
+  border-bottom: 2px dashed oklch(0.42 0.018 250);
+  border-radius: 4px 4px 0 0;
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 .slot--block {
@@ -1690,17 +1799,25 @@ main.container--wide {
   width: 100%;
 }
 
+.slot:hover:not(:focus-within) {
+  border-bottom-color: var(--info);
+  background: oklch(0.85 0.19 215 / 0.07);
+}
+
+/* Lleno = lima; con foco = cian. Se distingue de un vistazo que falta completar. */
 .slot--filled {
-  border-bottom-color: var(--accent);
+  border-bottom: 2px solid var(--accent);
+  background: var(--accent-soft);
 }
 
 .slot:focus-within {
-  border-bottom-color: var(--info);
+  border-bottom: 2px solid var(--info);
   background: var(--info-bg);
+  box-shadow: 0 0 0 3px oklch(0.85 0.19 215 / 0.14);
 }
 
 .slot--invalid {
-  border-bottom-color: var(--danger);
+  border-bottom: 2px solid var(--danger);
   background: var(--danger-bg);
 }
 
@@ -1708,7 +1825,7 @@ main.container--wide {
 .slot__input {
   grid-area: 1 / 1;
   min-width: 3ch;
-  padding: 0 3px;
+  padding: 2px 5px;
   font: inherit;
   letter-spacing: inherit;
   line-height: inherit;
@@ -1778,6 +1895,57 @@ main.container--wide {
 
 .project-card__flag--maker {
   color: var(--text-muted);
+}
+
+/* ------------------------------------------------------ capa de movimiento
+
+   Solo en el montaje: nada se mueve mientras el alumno trabaja. La unica
+   animacion continua es el barrido del encabezado del prompt y el latido del
+   boton de enviar, que es la accion principal de la pantalla.
+   ------------------------------------------------------------------------ */
+
+@keyframes lab-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.hero,
+.section-title,
+.compose,
+.project-head,
+.timeline__item,
+.project-card,
+.gallery-card,
+.workspace__col > .card {
+  animation: lab-rise 0.45s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+}
+
+.timeline__item:nth-child(2),
+.card-grid .project-card:nth-child(2),
+.gallery-grid .gallery-card:nth-child(2),
+.workspace__col > .card:nth-child(2) { animation-delay: 0.05s; }
+
+.timeline__item:nth-child(3),
+.card-grid .project-card:nth-child(3),
+.gallery-grid .gallery-card:nth-child(3),
+.workspace__col > .card:nth-child(3) { animation-delay: 0.1s; }
+
+.timeline__item:nth-child(n + 4),
+.card-grid .project-card:nth-child(n + 4),
+.gallery-grid .gallery-card:nth-child(n + 4) { animation-delay: 0.15s; }
+
+/* El boton principal del prompt respira: llama sin gritar. */
+@keyframes lab-breathe {
+  0%, 100% {
+    box-shadow: var(--key-edge-accent), 0 0 0 0 oklch(0.85 0.19 130 / 0.35), var(--glow);
+  }
+  50% {
+    box-shadow: var(--key-edge-accent), 0 0 0 7px oklch(0.85 0.19 130 / 0), var(--glow);
+  }
+}
+
+.compose__actions .btn--primary:not(:disabled) {
+  animation: lab-breathe 2.6s ease-out infinite;
 }
 
 /* ------------------------------------------------------------ responsive */
