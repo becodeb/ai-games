@@ -1,11 +1,15 @@
 import { getProjectDetail, listDashboard, listGallery } from './store.js'
+import { getImageProjectDetail, listImageDashboard, listImageGallery } from './image-store.js'
 
 let io = null
 
 export const rooms = {
   project: (id) => `project:${id}`,
   dashboard: 'dashboard',
-  gallery: 'gallery'
+  gallery: 'gallery',
+  imageProject: (id) => `image-project:${id}`,
+  imageDashboard: 'image-dashboard',
+  imageGallery: 'image-gallery'
 }
 
 export function attachIo(instance) {
@@ -29,6 +33,25 @@ export function attachIo(instance) {
       socket.emit('gallery:sync', listGallery())
     })
 
+    /* ------------------------------------------------ taller de imagenes */
+
+    socket.on('subscribe:image-project', (projectId) => {
+      if (typeof projectId !== 'string' || !projectId) return
+      socket.join(rooms.imageProject(projectId))
+      const detail = getImageProjectDetail(projectId)
+      if (detail) socket.emit('image-project:sync', detail)
+    })
+
+    socket.on('subscribe:image-dashboard', () => {
+      socket.join(rooms.imageDashboard)
+      socket.emit('image-dashboard:sync', listImageDashboard())
+    })
+
+    socket.on('subscribe:image-gallery', () => {
+      socket.join(rooms.imageGallery)
+      socket.emit('image-gallery:sync', listImageGallery())
+    })
+
     socket.on('unsubscribe', (room) => {
       if (typeof room === 'string' && room) socket.leave(room)
     })
@@ -44,4 +67,15 @@ export function broadcastProject(projectId) {
 
   io.to(rooms.dashboard).emit('dashboard:sync', listDashboard())
   io.to(rooms.gallery).emit('gallery:sync', listGallery())
+}
+
+/** Lo mismo para el taller de imagenes. */
+export function broadcastImageProject(projectId) {
+  if (!io || !projectId) return
+
+  const detail = getImageProjectDetail(projectId)
+  if (detail) io.to(rooms.imageProject(projectId)).emit('image-project:sync', detail)
+
+  io.to(rooms.imageDashboard).emit('image-dashboard:sync', listImageDashboard())
+  io.to(rooms.imageGallery).emit('image-gallery:sync', listImageGallery())
 }

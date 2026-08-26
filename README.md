@@ -14,6 +14,11 @@ Aplicacion web para un taller escolar donde los chicos escriben el *prompt*, un 
 | `/dashboard/:id` | Profesor | Prompt a la izquierda, codigo de la IA a la derecha, preview en vivo |
 | `/galeria` | Publico | Grid con todos los juegos jugables |
 | `/jugar/:iterationId` | Publico | El juego a pantalla completa |
+| `/nueva-imagen` | Alumno | Titulo + un pedido de imagen en texto libre, con referencias adjuntas |
+| `/imagen/:id` | Alumno | Linea de tiempo: pedido → 4 imagenes → correccion → 4 imagenes |
+| `/dashboard-imagenes` | Profesor | Todos los pedidos de imagen, con los pendientes destacados |
+| `/dashboard-imagenes/:id` | Profesor | Prompt a la izquierda, las 4 imagenes a subir a la derecha |
+| `/galeria-imagenes` | Publico | Grid con las imagenes terminadas |
 
 ## Stack
 
@@ -118,6 +123,33 @@ En cada version el panel del profe tiene una tarjeta para retomar el hilo desde 
 Copiar el prompt no bloquea nada. Debajo de cada pedido hay un area **"Ya tengo la respuesta de la IA"**
 donde el chico pega el codigo, lo previsualiza y publica la version el mismo, sin depender de un profe. El
 boton **Enviar a los profes** sigue disponible por si copio el prompt sin querer o prefiere delegarlo.
+
+## El taller de imagenes
+
+La misma idea que los juegos, pero lo que vuelve son imagenes. Corre sobre tablas propias
+(`image_projects`, `image_requests`, `image_assets`) y su propia API en `/api/images`, asi los dos
+talleres no se pisan.
+
+1. En `/nueva-imagen` el alumno le pone un titulo y escribe el pedido en un cuadro libre. El comienzo
+   **"Generame una imagen"** ya viene escrito y no se puede borrar: el chico sigue la frase con sus palabras.
+2. Abajo puede adjuntar hasta 4 imagenes de referencia (arrastrandolas o eligiendolas del disco).
+3. **Enviar a los profes** y queda esperando. El pedido aparece en `/dashboard-imagenes`.
+4. El profe abre el pedido (queda tomado a su nombre), copia el prompt, lo pega en la IA y sube
+   **4 imagenes** en la columna derecha. **Aprobar y enviar al alumno** las publica al instante.
+5. El alumno ve las 4, **elige una** y escribe la correccion. Ese pedido nuevo viaja con la imagen elegida
+   como punto de partida: el profe la ve marcada y la descarga para adjuntarla en el chat de la IA.
+6. El ciclo se repite. Cada version queda guardada entera: nada se sobreescribe.
+
+Detalles que conviene saber:
+
+- Las imagenes se guardan como archivos en el volumen de datos (`<data>/images`) y se sirven por
+  `/api/images/file/:assetId`. En la base solo queda el registro, no los bytes.
+- Viajan al servidor como data URL adentro del JSON. El navegador las achica antes de mandarlas
+  (1400 px las referencias, 1920 px los resultados) y el servidor rechaza cualquier cosa que no sea
+  PNG, JPG, WEBP o GIF de hasta 8 MB.
+- Si el profe vuelve a publicar sobre una version ya entregada, la tanda nueva reemplaza a la anterior
+  y los archivos viejos se borran del disco. Las otras versiones no se tocan.
+- El alumno tambien puede cerrar el ciclo solo: **"Ya tengo las imagenes de la IA"** le deja subir la tanda.
 
 ## Notas tecnicas
 

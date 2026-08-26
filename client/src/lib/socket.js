@@ -49,6 +49,12 @@ function roomName(subscribeEvent, payload) {
       return 'dashboard'
     case 'subscribe:gallery':
       return 'gallery'
+    case 'subscribe:image-project':
+      return `image-project:${payload}`
+    case 'subscribe:image-dashboard':
+      return 'image-dashboard'
+    case 'subscribe:image-gallery':
+      return 'image-gallery'
     default:
       return null
   }

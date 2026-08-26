@@ -11,6 +11,13 @@ export const ITERATION_STATUS = {
   delivered: { label: 'Juego listo', tone: 'ok' }
 }
 
+/** Mismo ciclo que las iteraciones de juego, pero lo que llega son imagenes. */
+export const IMAGE_REQUEST_STATUS = {
+  copied: { label: 'Prompt copiado', tone: 'neutral' },
+  pending: { label: 'Esperando al profe', tone: 'warn' },
+  delivered: { label: 'Imagenes listas', tone: 'ok' }
+}
+
 export function statusInfo(map, value) {
   return map[value] || { label: value || '—', tone: 'neutral' }
 }

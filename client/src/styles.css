@@ -1855,3 +1855,417 @@ main.container--wide {
     transition-duration: 0.001ms !important;
   }
 }
+
+/* ==========================================================================
+   TALLER DE IMAGENES
+   Mismo sistema visual que los juegos: el pedido es la pantalla, y lo que
+   vuelve son 4 imagenes en vez de codigo.
+   ========================================================================== */
+
+.compose__meta {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: 12px;
+}
+
+.input--invalid {
+  border-color: var(--danger);
+}
+
+/* --------------------------------------------------- el pedido de imagen */
+
+.ibox {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.ibox--invalid {
+  border-color: var(--danger);
+}
+
+.ibox__doc {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.ibox__prefix {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.ibox__lock {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.ibox__input {
+  width: 100%;
+  min-height: 120px;
+  border: 0;
+  border-left: 2px solid var(--border);
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 19px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+  padding: 4px 0 4px 14px;
+  resize: none;
+  overflow: hidden;
+  outline: none;
+}
+
+.ibox__input:focus {
+  border-left-color: var(--accent);
+}
+
+.ibox__input::placeholder {
+  color: var(--text-muted);
+}
+
+.ibox__hints {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.ibox__hints-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-right: 2px;
+}
+
+.ibox__hint {
+  font-size: 12px;
+  color: var(--text-soft);
+  background: var(--bg-sunken);
+  border-radius: 999px;
+  padding: 3px 10px;
+}
+
+/* ------------------------------------------------------------- adjuntos */
+
+.attach {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.attach__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.attach__drop {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+  transition: border-color 0.16s ease, background 0.16s ease;
+}
+
+.attach__drop--over {
+  border-color: var(--accent);
+  background: var(--surface-hover);
+}
+
+.attach__drop--full {
+  border-style: solid;
+}
+
+.attach__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+}
+
+.attach__item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.attach__item img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-sunken);
+}
+
+.attach__remove {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.attach__remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.attach__name {
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attach__button {
+  align-self: flex-start;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+
+.attach__button:hover:not(:disabled) {
+  border-color: var(--accent);
+}
+
+.attach__button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.attach__input {
+  display: none;
+}
+
+/* ------------------------------------------------- las imagenes que vuelven */
+
+.shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.shots--grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.shot {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+}
+
+.shot--chosen {
+  border-color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.shot__frame {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-sunken);
+  cursor: zoom-in;
+}
+
+.shot__frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.shot__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 0 4px 2px;
+}
+
+.shot__index {
+  font-size: 12px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+.shot__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.shot-zoom {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.shot-zoom img {
+  display: block;
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--bg-sunken);
+}
+
+/* ------------------------------------------- imagen elegida y referencias */
+
+.chosen {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--bg-subtle);
+}
+
+.chosen--compact {
+  padding: 10px;
+}
+
+.chosen__thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.chosen p {
+  font-size: 13px;
+}
+
+.refs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.refs__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.refs__grid img {
+  width: 84px;
+  height: 84px;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* ---------------------------------------------- tarjetas, galeria, tags */
+
+.project-card__cover {
+  display: block;
+  aspect-ratio: 16 / 10;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  background: var(--bg-sunken);
+}
+
+.project-card__cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-card__image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.gallery-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.kind-tag {
+  display: inline-block;
+  margin-right: 8px;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 1px 7px;
+  vertical-align: middle;
+}
+
+.kind-tag--image {
+  color: var(--info);
+  border-color: var(--info-border);
+  background: var(--info-bg);
+}
+
+@media (max-width: 640px) {
+  .compose__meta {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ibox {
+    padding: 18px;
+  }
+
+  .ibox__prefix,
+  .ibox__input {
+    font-size: 17px;
+  }
+}

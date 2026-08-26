@@ -5,13 +5,15 @@ import Modal from '../components/Modal.jsx'
 import { Badge, EmptyState, Spinner } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { PROJECT_STATUS, relativeTime, statusInfo } from '../lib/format.js'
-import { getMyProjectIds } from '../lib/storage.js'
+import { getMyImageProjectIds, getMyProjectIds } from '../lib/storage.js'
 import GalleryButton from '../components/GalleryButton.jsx'
+import ImageGalleryButton from '../components/ImageGalleryButton.jsx'
 
 export default function StudentHome() {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
-  const [projects, setProjects] = useState(null)
+  const [games, setGames] = useState(null)
+  const [images, setImages] = useState(null)
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
 
@@ -19,45 +21,65 @@ export default function StudentHome() {
     if (!open) return
     let alive = true
     setError('')
-    api
-      .listProjects()
-      .then((data) => alive && setProjects(data))
+    Promise.all([api.listProjects(), api.images.listProjects()])
+      .then(([gameList, imageList]) => {
+        if (!alive) return
+        setGames(gameList)
+        setImages(imageList)
+      })
       .catch((err) => alive && setError(err.message))
     return () => {
       alive = false
     }
   }, [open])
 
-  const myIds = useMemo(() => getMyProjectIds(), [open])
+  const myGameIds = useMemo(() => getMyProjectIds(), [open])
+  const myImageIds = useMemo(() => getMyImageProjectIds(), [open])
 
-  const { mine, others } = useMemo(() => {
-    const list = projects || []
+  const groups = useMemo(() => {
     const term = query.trim().toLowerCase()
-    const filtered = term
-      ? list.filter(
-          (p) =>
-            p.title.toLowerCase().includes(term) ||
-            (p.studentName || '').toLowerCase().includes(term)
-        )
-      : list
+    const match = (project) =>
+      !term ||
+      project.title.toLowerCase().includes(term) ||
+      (project.studentName || '').toLowerCase().includes(term)
+
+    const gameList = (games || []).filter(match)
+    const imageList = (images || []).filter(match)
+
     return {
-      mine: filtered.filter((p) => myIds.includes(p.id)),
-      others: filtered.filter((p) => !myIds.includes(p.id))
+      mine: [
+        ...gameList.filter((p) => myGameIds.includes(p.id)).map((p) => ({ ...p, kind: 'game' })),
+        ...imageList.filter((p) => myImageIds.includes(p.id)).map((p) => ({ ...p, kind: 'image' }))
+      ],
+      games: gameList.filter((p) => !myGameIds.includes(p.id)),
+      images: imageList.filter((p) => !myImageIds.includes(p.id))
     }
-  }, [projects, query, myIds])
+  }, [games, images, query, myGameIds, myImageIds])
+
+  const goTo = (project) =>
+    navigate(project.kind === 'image' ? `/imagen/${project.id}` : `/proyecto/${project.id}`)
+
+  const nothing = !groups.mine.length && !groups.games.length && !groups.images.length
 
   return (
-    <Layout actions={<GalleryButton />}>
+    <Layout
+      actions={
+        <>
+          <GalleryButton />
+          <ImageGalleryButton />
+        </>
+      }
+    >
       <section className="hero">
-        <span className="eyebrow">Taller de programacion con IA</span>
+        <span className="eyebrow">Taller de creacion con IA</span>
         <h1 className="hero__title">
           Escribi bien el pedido.
           <br />
-          La IA escribe el juego.
+          La IA lo crea.
         </h1>
         <p className="hero__lead">
           Vas a armar un pedido claro para una inteligencia artificial, tu profe lo va a ejecutar y en unos minutos vas
-          a estar jugando tu propio videojuego hecho con HTML, CSS y JavaScript.
+          a tener tu propio videojuego o tus propias imagenes.
         </p>
       </section>
 
@@ -71,21 +93,30 @@ export default function StudentHome() {
           <span className="choice__cta">Empezar</span>
         </Link>
 
-        <button type="button" className="choice choice--button" onClick={() => setOpen(true)}>
+        <Link className="choice" to="/nueva-imagen">
           <span className="choice__index">02</span>
-          <h2 className="choice__title">Continuar un juego existente</h2>
+          <h2 className="choice__title">Crear una imagen</h2>
           <p className="choice__text">
-            Busca tu juego por titulo y segui desde donde lo dejaste, con todo tu historial.
+            Conta con tus palabras que imagen queres, adjunta referencias y recibi 4 opciones para elegir.
           </p>
-          <span className="choice__cta">Buscar mi juego</span>
+          <span className="choice__cta">Empezar</span>
+        </Link>
+
+        <button type="button" className="choice choice--button" onClick={() => setOpen(true)}>
+          <span className="choice__index">03</span>
+          <h2 className="choice__title">Continuar un proyecto</h2>
+          <p className="choice__text">
+            Busca tu juego o tu imagen y segui desde donde lo dejaste, con todo tu historial.
+          </p>
+          <span className="choice__cta">Buscar el mio</span>
         </button>
       </section>
 
       <Modal
         open={open}
         onClose={() => setOpen(false)}
-        title="Continuar un juego"
-        description="Elegi tu juego de la lista para recuperar tus prompts y tus versiones."
+        title="Continuar un proyecto"
+        description="Elegi tu juego o tu imagen para recuperar tus pedidos y tus versiones."
         size="lg"
       >
         <input
@@ -98,31 +129,48 @@ export default function StudentHome() {
 
         {error ? <p className="alert alert--error">{error}</p> : null}
 
-        {projects === null && !error ? (
-          <Spinner label="Buscando juegos" />
+        {games === null && images === null && !error ? (
+          <Spinner label="Buscando proyectos" />
         ) : (
           <div className="project-picker">
-            {mine.length ? (
+            {groups.mine.length ? (
               <>
                 <h3 className="project-picker__group">En esta computadora</h3>
-                {mine.map((project) => (
-                  <ProjectRow key={project.id} project={project} onPick={() => navigate(`/proyecto/${project.id}`)} />
+                {groups.mine.map((project) => (
+                  <ProjectRow key={`${project.kind}-${project.id}`} project={project} onPick={() => goTo(project)} />
                 ))}
               </>
             ) : null}
 
-            {others.length ? (
+            {groups.games.length ? (
               <>
-                <h3 className="project-picker__group">Todos los juegos del taller</h3>
-                {others.map((project) => (
-                  <ProjectRow key={project.id} project={project} onPick={() => navigate(`/proyecto/${project.id}`)} />
+                <h3 className="project-picker__group">Juegos del taller</h3>
+                {groups.games.map((project) => (
+                  <ProjectRow
+                    key={`game-${project.id}`}
+                    project={{ ...project, kind: 'game' }}
+                    onPick={() => navigate(`/proyecto/${project.id}`)}
+                  />
                 ))}
               </>
             ) : null}
 
-            {!mine.length && !others.length ? (
+            {groups.images.length ? (
+              <>
+                <h3 className="project-picker__group">Imagenes del taller</h3>
+                {groups.images.map((project) => (
+                  <ProjectRow
+                    key={`image-${project.id}`}
+                    project={{ ...project, kind: 'image' }}
+                    onPick={() => navigate(`/imagen/${project.id}`)}
+                  />
+                ))}
+              </>
+            ) : null}
+
+            {nothing ? (
               <EmptyState
-                title="No hay juegos todavia"
+                title="No hay proyectos todavia"
                 description="Cuando alguien cree el primero, va a aparecer aca."
               />
             ) : null}
@@ -138,7 +186,12 @@ function ProjectRow({ project, onPick }) {
   return (
     <button type="button" className="project-row" onClick={onPick}>
       <div className="project-row__main">
-        <span className="project-row__title">{project.title}</span>
+        <span className="project-row__title">
+          <span className={`kind-tag kind-tag--${project.kind}`}>
+            {project.kind === 'image' ? 'imagen' : 'juego'}
+          </span>
+          {project.title}
+        </span>
         <span className="project-row__meta">
           {project.studentName || 'Sin nombre'} · version {project.currentVersion} · {relativeTime(project.updatedAt)}
         </span>

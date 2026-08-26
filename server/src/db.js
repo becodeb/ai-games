@@ -48,6 +48,59 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_projects_updated ON projects (updated_at DESC);
 `)
 
+/* ------------------------------------------------- taller de imagenes con IA
+   Mismo ciclo que los juegos (pedido del alumno -> profe -> entrega -> mejora)
+   pero lo que vuelve son 4 imagenes por pedido en vez de codigo. Tablas aparte
+   para no mezclar los dos talleres. */
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS image_projects (
+    id           TEXT PRIMARY KEY,
+    title        TEXT NOT NULL,
+    student_name TEXT NOT NULL DEFAULT '',
+    teacher_name TEXT NOT NULL DEFAULT '',
+    status       TEXT NOT NULL DEFAULT 'draft',
+    ai_chat_url  TEXT NOT NULL DEFAULT '',
+    teacher_note TEXT NOT NULL DEFAULT '',
+    created_at   TEXT NOT NULL,
+    updated_at   TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS image_requests (
+    id              TEXT PRIMARY KEY,
+    project_id      TEXT NOT NULL REFERENCES image_projects(id) ON DELETE CASCADE,
+    version         INTEGER NOT NULL,
+    kind            TEXT NOT NULL DEFAULT 'initial',
+    status          TEXT NOT NULL DEFAULT 'copied',
+    prompt_text     TEXT NOT NULL DEFAULT '',
+    prompt_readable TEXT NOT NULL DEFAULT '',
+    prompt_full     TEXT NOT NULL DEFAULT '',
+    base_asset_id   TEXT NOT NULL DEFAULT '',
+    published_by    TEXT NOT NULL DEFAULT '',
+    created_at      TEXT NOT NULL,
+    updated_at      TEXT NOT NULL,
+    delivered_at    TEXT,
+    UNIQUE (project_id, version)
+  );
+
+  CREATE TABLE IF NOT EXISTS image_assets (
+    id           TEXT PRIMARY KEY,
+    project_id   TEXT NOT NULL REFERENCES image_projects(id) ON DELETE CASCADE,
+    request_id   TEXT NOT NULL,
+    role         TEXT NOT NULL DEFAULT 'reference',
+    position     INTEGER NOT NULL DEFAULT 0,
+    filename     TEXT NOT NULL DEFAULT '',
+    mime         TEXT NOT NULL DEFAULT 'image/png',
+    bytes        INTEGER NOT NULL DEFAULT 0,
+    storage_path TEXT NOT NULL,
+    created_at   TEXT NOT NULL
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_image_requests_project ON image_requests (project_id, version);
+  CREATE INDEX IF NOT EXISTS idx_image_assets_request ON image_assets (request_id, role, position);
+  CREATE INDEX IF NOT EXISTS idx_image_projects_updated ON image_projects (updated_at DESC);
+`)
+
 export function newId() {
   return crypto.randomBytes(9).toString('base64url')
 }

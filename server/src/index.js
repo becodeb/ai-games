@@ -8,6 +8,7 @@ import { Server as SocketServer } from 'socket.io'
 
 import { attachIo } from './lib/realtime.js'
 import apiRouter from './routes/api.js'
+import imagesRouter from './routes/images.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -21,8 +22,9 @@ const app = express()
 app.set('trust proxy', 1)
 app.disable('x-powered-by')
 app.use(compression())
-app.use(express.json({ limit: '8mb' }))
+app.use(express.json({ limit: '64mb' }))
 
+app.use('/api/images', imagesRouter)
 app.use('/api', apiRouter)
 
 if (fs.existsSync(CLIENT_DIST)) {

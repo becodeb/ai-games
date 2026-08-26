@@ -1,22 +1,22 @@
 import { Link } from 'react-router-dom'
 
-export function Brand({ to = '/' }) {
+export function Brand({ to = '/', tagline = 'juegos con IA' }) {
   return (
     <Link className="brand" to={to}>
       <span className="brand__mark" aria-hidden="true" />
       <span className="brand__text">
-        STEAMLAB<span className="brand__thin">/ juegos con IA</span>
+        STEAMLAB<span className="brand__thin">/ {tagline}</span>
       </span>
     </Link>
   )
 }
 
-export default function Layout({ children, actions, brandTo, wide = false }) {
+export default function Layout({ children, actions, brandTo, tagline, wide = false }) {
   return (
     <div className="app">
       <header className="topbar">
         <div className={`topbar__inner${wide ? ' container--wide' : ' container'}`}>
-          <Brand to={brandTo} />
+          <Brand to={brandTo} tagline={tagline} />
           <div className="topbar__actions">{actions}</div>
         </div>
       </header>

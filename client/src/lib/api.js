@@ -35,8 +35,24 @@ export const api = {
 
   // Profesor y galeria
   listDashboard: () => request('/dashboard'),
-  listGallery: () => request('/gallery')
+  listGallery: () => request('/gallery'),
+
+  // Taller de imagenes: mismo ciclo que los juegos, sobre /api/images.
+  images: {
+    listProjects: () => request('/images/projects'),
+    createProject: (data) => request('/images/projects', { method: 'POST', body: data }),
+    getProject: (id) => request(`/images/projects/${id}`),
+    patchProject: (id, data) => request(`/images/projects/${id}`, { method: 'PATCH', body: data }),
+
+    addRequest: (id, data) => request(`/images/projects/${id}/requests`, { method: 'POST', body: data }),
+    sendRequest: (requestId) => request(`/images/requests/${requestId}/send`, { method: 'POST', body: {} }),
+    saveResults: (requestId, data) => request(`/images/requests/${requestId}/results`, { method: 'PUT', body: data }),
+
+    listDashboard: () => request('/images/dashboard'),
+    listGallery: () => request('/images/gallery')
+  }
 }
 
 export const playUrl = (iterationId) => `${BASE}/iterations/${iterationId}/play`
 export const downloadUrl = (iterationId) => `${BASE}/iterations/${iterationId}/download`
+export const imageDownloadUrl = (assetId) => `${BASE}/images/file/${assetId}/download`

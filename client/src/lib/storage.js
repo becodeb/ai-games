@@ -40,3 +40,19 @@ export function getStudentName() {
 export function setStudentName(name) {
   safeWrite(KEY_NAME, String(name || ''))
 }
+
+/* ---------------------------------------------- taller de imagenes */
+
+const KEY_IMAGE_PROJECTS = 'steamlab:my-image-projects'
+
+export function getMyImageProjectIds() {
+  const value = safeRead(KEY_IMAGE_PROJECTS, [])
+  return Array.isArray(value) ? value.filter((id) => typeof id === 'string') : []
+}
+
+export function rememberImageProject(id) {
+  if (!id) return
+  const ids = getMyImageProjectIds().filter((existing) => existing !== id)
+  ids.unshift(id)
+  safeWrite(KEY_IMAGE_PROJECTS, ids.slice(0, 30))
+}

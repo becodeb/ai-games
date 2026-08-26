@@ -72,6 +72,9 @@ export default function Dashboard() {
           <button type="button" className="btn btn--ghost" onClick={() => setAskName(true)}>
             {me ? `Sos ${me}` : 'Poner mi nombre'}
           </button>
+          <Link className="btn btn--ghost" to="/dashboard-imagenes">
+            Panel de imagenes
+          </Link>
           <a className="btn btn--ghost" href="/galeria" target="_blank" rel="noreferrer">
             Galeria
           </a>
