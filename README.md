@@ -12,8 +12,8 @@ Aplicacion web para un taller escolar donde los chicos escriben el *prompt*, un 
 | `/proyecto/:id` | Alumno | Linea de tiempo: prompt → juego → prompt de mejoras → juego |
 | `/dashboard` | Profesor | Todos los proyectos, con los pendientes destacados arriba |
 | `/dashboard/:id` | Profesor | Prompt a la izquierda, codigo de la IA a la derecha, preview en vivo |
-| `/galeria` | Publico | Grid con todos los juegos jugables |
-| `/jugar/:iterationId` | Publico | El juego a pantalla completa |
+| `/galeria` | Publico | Pensada para celular (llaveros NFC): portada y un juego por pantalla, deslizando; "Ver todos" abre la grilla |
+| `/jugar/:iterationId` | Publico | El juego a pantalla completa, con flechas y botones tactiles en el celu |
 | `/nueva-imagen` | Alumno | Titulo + un pedido de imagen en texto libre, con referencias adjuntas |
 | `/imagen/:id` | Alumno | Linea de tiempo: pedido → 4 imagenes → correccion → 4 imagenes |
 | `/dashboard-imagenes` | Profesor | Todos los pedidos de imagen, con los pendientes destacados |
@@ -152,6 +152,15 @@ Detalles que conviene saber:
 - El alumno tambien puede cerrar el ciclo solo: **"Ya tengo las imagenes de la IA"** le deja subir la tanda.
 
 ## Notas tecnicas
+
+- **Miniaturas de la galeria:** el servidor abre cada juego en un Chromium headless con ventana de 1280x800
+  y le saca una foto (`<data>/thumbs/<iterationId>.webp`, servida en `/api/iterations/:id/thumb`). Se hace
+  al publicar o corregir un juego y, al arrancar, para los que falten. El juego corre sin acceso a la red.
+  Sin navegador (`THUMBS_BROWSER`; se apaga con `THUMBS_DISABLED=1`) la galeria muestra la preview viva.
+  En local usa el Chrome instalado; la imagen de Docker trae `chromium` y fuentes de emoji.
+- **Juego en el celu:** en pantallas chicas el juego se dibuja a 1280x800 y se achica entero, sin recortes.
+  Los controles tactiles mandan `postMessage` y un script que se agrega al servir el juego los convierte en
+  `keydown`/`keyup` de flechas, espacio y enter, asi que tambien andan los juegos ya publicados.
 
 - Los juegos corren dentro de un `iframe` con `sandbox` sin `allow-same-origin`, o sea que no pueden tocar
   la sesion ni los datos de la app. Como eso rompe `localStorage`, se inyecta un reemplazo en memoria para

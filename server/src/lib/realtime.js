@@ -69,6 +69,12 @@ export function broadcastProject(projectId) {
   io.to(rooms.gallery).emit('gallery:sync', listGallery())
 }
 
+/** Solo la galeria (p. ej. cuando termina de generarse una miniatura). */
+export function broadcastGallery() {
+  if (!io) return
+  io.to(rooms.gallery).emit('gallery:sync', listGallery())
+}
+
 /** Lo mismo para el taller de imagenes. */
 export function broadcastImageProject(projectId) {
   if (!io || !projectId) return

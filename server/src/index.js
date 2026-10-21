@@ -6,7 +6,9 @@ import express from 'express'
 import compression from 'compression'
 import { Server as SocketServer } from 'socket.io'
 
-import { attachIo } from './lib/realtime.js'
+import { attachIo, broadcastGallery } from './lib/realtime.js'
+import { getIterationDocument, listGallery } from './lib/store.js'
+import { enqueueThumbnail, onThumbnailReady, thumbnailsEnabled } from './lib/thumbnails.js'
 import apiRouter from './routes/api.js'
 import imagesRouter from './routes/images.js'
 
@@ -64,6 +66,22 @@ const io = new SocketServer(server, {
   path: '/socket.io'
 })
 attachIo(io)
+
+// Cada miniatura nueva le llega a la galeria abierta; agrupadas para no mandar 40 listas seguidas.
+let galleryTimer = null
+onThumbnailReady(() => {
+  clearTimeout(galleryTimer)
+  galleryTimer = setTimeout(broadcastGallery, 1500)
+})
+
+// Al arrancar se completan las fotos que falten (juegos viejos o publicados con el server caido).
+if (thumbnailsEnabled) {
+  for (const game of listGallery()) {
+    if (!game.thumbUrl) enqueueThumbnail(game.iterationId, () => getIterationDocument(game.iterationId))
+  }
+} else {
+  console.log('[steamlab] sin navegador para miniaturas: la galeria usa la preview viva')
+}
 
 server.listen(PORT, HOST, () => {
   console.log(`[steamlab] escuchando en http://${HOST}:${PORT}`)

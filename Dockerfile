@@ -35,7 +35,14 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOST=0.0.0.0 \
     DATABASE_PATH=/data/steamlab.db \
-    CLIENT_DIST=/app/client/dist
+    CLIENT_DIST=/app/client/dist \
+    THUMBS_BROWSER=/usr/bin/chromium
+
+# Chromium headless saca las fotos de los juegos para la galeria (ver server/src/lib/thumbnails.js).
+# Las fuentes de emoji importan: los juegos que arma la IA estan llenos de emoji.
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends chromium fonts-noto-color-emoji fonts-liberation \
+  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 

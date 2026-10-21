@@ -145,6 +145,32 @@ ${jsBlock}
 </html>`
 }
 
+/**
+ * Puente de los controles tactiles: la pantalla de juego manda {type: 'key'} por postMessage y aca
+ * se convierte en un keydown/keyup de verdad, para que los juegos hechos para teclado anden en el celu.
+ * Se agrega al servir el juego (no se guarda), asi les llega tambien a los juegos ya publicados.
+ */
+const PLAYER_BRIDGE = `<script data-steamlab="bridge">
+(function () {
+  window.addEventListener('message', function (e) {
+    var d = e.data;
+    if (!d || d.__steamlab !== true || d.type !== 'key' || e.source !== window.parent) return;
+    var ev = new KeyboardEvent(d.down ? 'keydown' : 'keyup', { key: d.key, code: d.code, bubbles: true, cancelable: true });
+    // Muchos juegos todavia miran keyCode/which, que el constructor deja en 0.
+    try {
+      Object.defineProperty(ev, 'keyCode', { get: function () { return d.keyCode; } });
+      Object.defineProperty(ev, 'which', { get: function () { return d.keyCode; } });
+    } catch (err) {}
+    var target = document.activeElement && document.activeElement !== document.documentElement ? document.activeElement : document.body || document;
+    target.dispatchEvent(ev);
+  });
+})();
+</script>`
+
+export function withPlayerBridge(document) {
+  return injectBefore(document, /<\/body\s*>/i, PLAYER_BRIDGE) || `${document}\n${PLAYER_BRIDGE}`
+}
+
 export function hasPlayableCode(parts = {}) {
   return Boolean((parts.html || '').trim() || (parts.js || '').trim() || (parts.css || '').trim())
 }

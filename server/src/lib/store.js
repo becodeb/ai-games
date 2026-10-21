@@ -1,5 +1,6 @@
 import { db, newId, now } from '../db.js'
 import { buildGameDocument, hasPlayableCode } from './game-code.js'
+import { thumbnailVersion } from './thumbnails.js'
 
 /** Estados de proyecto: draft | pending | processing | completed */
 /** Estados de iteracion: copied | pending | delivered */
@@ -325,6 +326,7 @@ export function listGallery() {
     const latest = statements.latestDelivered.get(row.id)
     if (!latest) continue
     const delivered = statements.countDelivered.get(row.id).n
+    const thumb = thumbnailVersion(latest.id)
     games.push({
       projectId: row.id,
       iterationId: latest.id,
@@ -332,7 +334,9 @@ export function listGallery() {
       studentName: row.student_name,
       version: latest.version,
       versionCount: delivered,
-      updatedAt: latest.updated_at || latest.created_at
+      updatedAt: latest.updated_at || latest.created_at,
+      // null mientras la foto no este lista: la galeria muestra la preview viva.
+      thumbUrl: thumb ? `/api/iterations/${latest.id}/thumb?v=${thumb}` : null
     })
   }
   return games.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : -1))

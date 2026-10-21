@@ -13,7 +13,8 @@ import {
   updateProject
 } from '../lib/store.js'
 import { broadcastProject } from '../lib/realtime.js'
-import { buildGameDocument, hasPlayableCode } from '../lib/game-code.js'
+import { buildGameDocument, hasPlayableCode, withPlayerBridge } from '../lib/game-code.js'
+import { enqueueThumbnail, thumbnailFile } from '../lib/thumbnails.js'
 
 const router = Router()
 
@@ -117,6 +118,8 @@ router.put('/iterations/:id/code', (req, res) => {
   })
   if (!projectId) return res.status(404).json({ error: 'Iteracion no encontrada.' })
 
+  // Codigo nuevo o corregido: la foto de la galeria se rehace.
+  enqueueThumbnail(req.params.id, () => getIterationDocument(req.params.id), { force: true })
   broadcastProject(projectId)
   res.json(getProjectDetail(projectId))
 })
@@ -139,7 +142,18 @@ router.get('/iterations/:id/play', (req, res) => {
   res.setHeader('X-Content-Type-Options', 'nosniff')
   res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Content-Security-Policy', "frame-ancestors 'self'")
-  res.send(document)
+  res.send(withPlayerBridge(document))
+})
+
+// Foto del juego para la galeria. Lleva ?v=<version> en la URL, asi que se puede cachear para siempre.
+router.get('/iterations/:id/thumb', (req, res) => {
+  const file = thumbnailFile(req.params.id)
+  if (!file) {
+    enqueueThumbnail(req.params.id, () => getIterationDocument(req.params.id))
+    return res.status(404).type('text/plain').send('Miniatura en preparacion.')
+  }
+  res.setHeader('Cache-Control', 'public, max-age=31536000, immutable')
+  res.type('image/webp').sendFile(file)
 })
 
 router.get('/iterations/:id/download', (req, res) => {
