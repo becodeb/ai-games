@@ -15,11 +15,21 @@ import {
 import { broadcastProject } from '../lib/realtime.js'
 import { buildGameDocument, hasPlayableCode, withPlayerBridge } from '../lib/game-code.js'
 import { enqueueThumbnail, thumbnailFile } from '../lib/thumbnails.js'
+import { ai } from '../lib/ai/index.js'
 
 const router = Router()
 
 function asString(value) {
   return typeof value === 'string' ? value : ''
+}
+
+/** El envio del alumno dispara la IA, pero nunca puede hacer fallar su pedido. */
+function autoGenerate(iterationId) {
+  try {
+    ai.enqueue(iterationId, { auto: true })
+  } catch (error) {
+    console.warn('[ai] no se pudo encolar la generacion automatica:', error?.message)
+  }
 }
 
 router.get('/health', (_req, res) => {
@@ -48,6 +58,7 @@ router.post('/projects', (req, res) => {
     send: Boolean(send)
   })
 
+  if (send) autoGenerate(detail.iterations[0].id)
   broadcastProject(detail.project.id)
   res.status(201).json(detail)
 })
@@ -72,14 +83,17 @@ router.post('/projects/:id/iterations', (req, res) => {
   })
   if (!detail) return res.status(404).json({ error: 'Proyecto no encontrado.' })
 
+  if (send) autoGenerate(detail.iterations[detail.iterations.length - 1].id)
   broadcastProject(req.params.id)
   res.status(201).json(detail)
 })
 
 // "Ya lo copie pero igual lo quiero mandar": no crea una version nueva.
 router.post('/iterations/:id/send', (req, res) => {
+  const wasCopied = getIterationRow(req.params.id)?.status === 'copied'
   const projectId = markIterationSent(req.params.id)
   if (!projectId) return res.status(404).json({ error: 'Iteracion no encontrada.' })
+  if (wasCopied) autoGenerate(req.params.id)
 
   broadcastProject(projectId)
   res.json(getProjectDetail(projectId))
@@ -117,6 +131,9 @@ router.put('/iterations/:id/code', (req, res) => {
     publishedBy: asString(publishedBy)
   })
   if (!projectId) return res.status(404).json({ error: 'Iteracion no encontrada.' })
+
+  // Publicar a mano le gana a la IA: si habia una generacion en curso se cancela y su resultado se descarta.
+  if (hasPlayableCode({ html: asString(html), css: asString(css), js: asString(js) })) ai.cancel(req.params.id)
 
   // Codigo nuevo o corregido: la foto de la galeria se rehace.
   enqueueThumbnail(req.params.id, () => getIterationDocument(req.params.id), { force: true })

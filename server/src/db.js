@@ -101,6 +101,37 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_image_projects_updated ON image_projects (updated_at DESC);
 `)
 
+/* ------------------------------------------- generacion automatica con IA
+   Cada iteracion puede tener varios intentos de la IA. Un intento es un borrador privado:
+   nunca forma parte del detalle del proyecto, la galeria ni /play. Solo se publica al aprobarlo. */
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS ai_attempts (
+    id            TEXT PRIMARY KEY,
+    iteration_id  TEXT NOT NULL REFERENCES iterations(id) ON DELETE CASCADE,
+    seq           INTEGER NOT NULL,
+    feedback      TEXT NOT NULL DEFAULT '',
+    requested_by  TEXT NOT NULL DEFAULT '',
+    status        TEXT NOT NULL DEFAULT 'queued',
+    code_html     TEXT NOT NULL DEFAULT '',
+    base_code     TEXT NOT NULL DEFAULT '',
+    error         TEXT NOT NULL DEFAULT '',
+    error_code    TEXT NOT NULL DEFAULT '',
+    warning       TEXT NOT NULL DEFAULT '',
+    model         TEXT NOT NULL DEFAULT '',
+    input_tokens  INTEGER NOT NULL DEFAULT 0,
+    output_tokens INTEGER NOT NULL DEFAULT 0,
+    tries         INTEGER NOT NULL DEFAULT 0,
+    created_at    TEXT NOT NULL,
+    started_at    TEXT,
+    finished_at   TEXT,
+    UNIQUE (iteration_id, seq)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_ai_attempts_status ON ai_attempts (status);
+  CREATE INDEX IF NOT EXISTS idx_ai_attempts_created ON ai_attempts (created_at);
+`)
+
 export function newId() {
   return crypto.randomBytes(9).toString('base64url')
 }

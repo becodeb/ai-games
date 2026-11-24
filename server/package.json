@@ -6,9 +6,11 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "node --watch src/index.js"
+    "dev": "node --env-file-if-exists=../.env --env-file-if-exists=.env --watch src/index.js",
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^1.13.0",
     "better-sqlite3": "^12.11.1",
     "compression": "^1.7.5",
     "express": "^4.21.2",

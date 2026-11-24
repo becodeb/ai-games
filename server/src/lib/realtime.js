@@ -1,4 +1,5 @@
 import { getProjectDetail, listDashboard, listGallery } from './store.js'
+import { latestAttemptStatus, projectOfIteration } from './ai/attempts.js'
 import { getImageProjectDetail, listImageDashboard, listImageGallery } from './image-store.js'
 
 let io = null
@@ -6,6 +7,7 @@ let io = null
 export const rooms = {
   project: (id) => `project:${id}`,
   dashboard: 'dashboard',
+  teachers: 'teachers',
   gallery: 'gallery',
   imageProject: (id) => `image-project:${id}`,
   imageDashboard: 'image-dashboard',
@@ -26,6 +28,11 @@ export function attachIo(instance) {
     socket.on('subscribe:dashboard', () => {
       socket.join(rooms.dashboard)
       socket.emit('dashboard:sync', listDashboard())
+    })
+
+    // Sala solo de profes: recibe los avisos de la IA (sin codigo). Los alumnos nunca se suscriben.
+    socket.on('subscribe:teacher', () => {
+      socket.join(rooms.teachers)
     })
 
     socket.on('subscribe:gallery', () => {
@@ -67,6 +74,15 @@ export function broadcastProject(projectId) {
 
   io.to(rooms.dashboard).emit('dashboard:sync', listDashboard())
   io.to(rooms.gallery).emit('gallery:sync', listGallery())
+}
+
+/** Cambio de estado de un intento de la IA: aviso liviano a los profes y lista del dashboard al dia. */
+export function broadcastAi(iterationId) {
+  if (!io) return
+  const projectId = projectOfIteration(iterationId)
+  if (!projectId) return
+  io.to(rooms.teachers).emit('ai:changed', { projectId, iterationId, status: latestAttemptStatus(iterationId) })
+  io.to(rooms.dashboard).emit('dashboard:sync', listDashboard())
 }
 
 /** Solo la galeria (p. ej. cuando termina de generarse una miniatura). */

@@ -1,6 +1,7 @@
 import { db, newId, now } from '../db.js'
 import { buildGameDocument, hasPlayableCode } from './game-code.js'
 import { thumbnailVersion } from './thumbnails.js'
+import { latestAttemptStatus } from './ai/attempts.js'
 
 /** Estados de proyecto: draft | pending | processing | completed */
 /** Estados de iteracion: copied | pending | delivered */
@@ -297,6 +298,8 @@ export function listDashboard() {
       currentVersion: iterations.length ? iterations[iterations.length - 1].version : 0,
       deliveredCount: delivered.length,
       pendingVersion: pending.length ? pending[0].version : null,
+      // Estado del ultimo intento de la IA sobre la version pendiente (sin codigo). null si no hay.
+      aiStatus: pending.length ? latestAttemptStatus(pending[0].id) : null,
       lastMaker: latestDelivered ? latestDelivered.published_by || '' : '',
       lastPromptPreview: (iterations[iterations.length - 1]?.prompt_readable || '').slice(0, 240)
     }
