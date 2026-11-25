@@ -3117,3 +3117,57 @@ main.container--wide {
     font-size: 17px;
   }
 }
+
+/* ------------------------------------------------- generacion con IA (profes) */
+
+.badge--danger {
+  background: var(--danger-bg);
+  border-color: var(--danger-border);
+  color: var(--danger);
+}
+
+.project-card__badges {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.ai-card__status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ai-card__status .spinner {
+  padding: 0;
+}
+
+.ai-card__tokens {
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.ai-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.ai-card__feedback {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-left: 2px solid var(--border-strong);
+  color: var(--text-soft);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+.ai-card__redo {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}

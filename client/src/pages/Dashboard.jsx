@@ -5,7 +5,7 @@ import NameModal from '../components/NameModal.jsx'
 import { Badge, EmptyState, SectionTitle, Spinner } from '../components/ui.jsx'
 import { api } from '../lib/api.js'
 import { subscribe } from '../lib/socket.js'
-import { PROJECT_STATUS, relativeTime, statusInfo } from '../lib/format.js'
+import { AI_STATUS, PROJECT_STATUS, relativeTime, statusInfo } from '../lib/format.js'
 import { getTeacherName, setTeacherName } from '../lib/teacher.js'
 
 const FILTERS = [
@@ -156,6 +156,7 @@ export default function Dashboard() {
 
 function ProjectCard({ project, me, highlight = false }) {
   const status = statusInfo(PROJECT_STATUS, project.status)
+  const ai = AI_STATUS[project.aiStatus]
   const takenByOther = project.teacherName && project.teacherName !== me
   const maker =
     project.lastMaker === 'student'
@@ -168,7 +169,10 @@ function ProjectCard({ project, me, highlight = false }) {
     <Link className={`project-card${highlight ? ' project-card--highlight' : ''}`} to={`/dashboard/${project.id}`}>
       <div className="project-card__head">
         <h4>{project.title}</h4>
-        <Badge tone={status.tone}>{status.label}</Badge>
+        <div className="project-card__badges">
+          {ai ? <Badge tone={ai.tone}>{ai.label}</Badge> : null}
+          <Badge tone={status.tone}>{status.label}</Badge>
+        </div>
       </div>
       <p className="project-card__student">{project.studentName || 'Sin nombre'}</p>
       <p className="project-card__preview">{project.lastPromptPreview || 'Sin prompt'}</p>

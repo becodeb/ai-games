@@ -33,6 +33,14 @@ export const api = {
   // Devuelve exactamente el documento que se va a publicar, sin guardar nada.
   preview: (code) => request('/preview', { method: 'POST', body: code }),
 
+  // Generacion con IA (solo profes). Los intentos son borradores privados hasta aprobarlos.
+  ai: {
+    status: () => request('/ai/status'),
+    list: (iterationId) => request(`/iterations/${iterationId}/ai`),
+    generate: (iterationId, data) => request(`/iterations/${iterationId}/ai`, { method: 'POST', body: data || {} }),
+    cancel: (iterationId) => request(`/iterations/${iterationId}/ai/cancel`, { method: 'POST', body: {} })
+  },
+
   // Profesor y galeria
   listDashboard: () => request('/dashboard'),
   listGallery: () => request('/gallery'),

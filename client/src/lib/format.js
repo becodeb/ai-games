@@ -18,6 +18,14 @@ export const IMAGE_REQUEST_STATUS = {
   delivered: { label: 'Imagenes listas', tone: 'ok' }
 }
 
+/** Estado del ultimo intento de la IA (aiStatus del dashboard). `canceled` no muestra nada. */
+export const AI_STATUS = {
+  queued: { label: 'IA generando', tone: 'info' },
+  generating: { label: 'IA generando', tone: 'info' },
+  ready: { label: 'Listo para revisar', tone: 'ok' },
+  error: { label: 'La IA fallo', tone: 'danger' }
+}
+
 export function statusInfo(map, value) {
   return map[value] || { label: value || '—', tone: 'neutral' }
 }

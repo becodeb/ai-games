@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import Layout from '../components/Layout.jsx'
 import GameFrame from '../components/GameFrame.jsx'
 import NameModal from '../components/NameModal.jsx'
+import AiCard from '../components/AiCard.jsx'
 import { Badge, EmptyState, PromptBlock, Spinner } from '../components/ui.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { api, downloadUrl } from '../lib/api.js'
@@ -46,8 +47,28 @@ export default function DashboardProject() {
   const [askName, setAskName] = useState(() => !getTeacherName())
   const [showBase, setShowBase] = useState(false)
 
+  // Generacion con IA: los intentos son borradores privados que se cargan en el mismo formulario.
+  const [aiConfig, setAiConfig] = useState(null)
+  const [attemptsState, setAttemptsState] = useState({ id: null, list: [] })
+  const [draftId, setDraftId] = useState(null)
+  const [pendingDraftId, setPendingDraftId] = useState(null)
+  const [feedback, setFeedback] = useState('')
+  const [previewError, setPreviewError] = useState(null)
+  const [aiWorking, setAiWorking] = useState(false)
+
   const dirtyRef = useRef(false)
   dirtyRef.current = dirty
+  const formRef = useRef(form)
+  formRef.current = form
+  const draftRef = useRef(null)
+  draftRef.current = draftId
+  const selectedIdRef = useRef(null)
+  selectedIdRef.current = selectedId
+  const fetchTicketRef = useRef(0)
+  // Intento que ya se evaluo para cargar solo, por version abierta (no pisa lo que el profe eligio despues).
+  const consideredRef = useRef({ selId: null, attemptId: null })
+  // Pedidos hechos en esta sesion (intento -> editor tal como se mando): su resultado se carga solo.
+  const requestedRef = useRef(new Map())
 
   /* ------------------------------------------------------------- carga */
 
@@ -74,6 +95,43 @@ export default function DashboardProject() {
 
   const iterations = detail?.iterations || []
   const project = detail?.project
+
+  /* ------------------------------------------------------- IA: estado */
+
+  useEffect(() => {
+    let alive = true
+    api.ai
+      .status()
+      .then((data) => alive && setAiConfig(data))
+      .catch(() => alive && setAiConfig({ enabled: false }))
+    return () => {
+      alive = false
+    }
+  }, [])
+  const aiEnabled = Boolean(aiConfig?.enabled)
+
+  const refreshAttempts = useCallback((iterationId) => {
+    const ticket = ++fetchTicketRef.current
+    return api.ai
+      .list(iterationId)
+      .then((data) => {
+        if (ticket === fetchTicketRef.current) setAttemptsState({ id: iterationId, list: data.attempts || [] })
+      })
+      .catch(() => {})
+  }, [])
+
+  useEffect(() => {
+    if (!aiEnabled) return undefined
+    return subscribe('subscribe:teacher', undefined, {
+      'ai:changed': (data) => {
+        if (data?.iterationId && data.iterationId === selectedIdRef.current) refreshAttempts(data.iterationId)
+      }
+    })
+  }, [aiEnabled, refreshAttempts])
+
+  useEffect(() => {
+    if (aiEnabled && selectedId) refreshAttempts(selectedId)
+  }, [aiEnabled, selectedId, refreshAttempts])
 
   /* ------------------------------------------- tomar el proyecto al abrir */
 
@@ -110,14 +168,69 @@ export default function DashboardProject() {
   useEffect(() => {
     if (!selected) return
     const changedSelection = loadedForRef.current !== selected.id
-    if (!changedSelection && dirtyRef.current) return
+    // Ni lo que el profe escribio ni un borrador de la IA cargado se pisan con un project:sync.
+    if (!changedSelection && (dirtyRef.current || draftRef.current)) return
 
     loadedForRef.current = selected.id
+    if (changedSelection) {
+      draftRef.current = null
+      setDraftId(null)
+      setPendingDraftId(null)
+      setFeedback('')
+      consideredRef.current = { selId: selected.id, attemptId: null }
+    }
     const code = selected.code || EMPTY_CODE
     setForm({ html: code.html || '', css: code.css || '', js: code.js || '' })
     setMode(code.css || code.js ? 'split' : 'single')
     setDirty(false)
   }, [selected])
+
+  const attempts = attemptsState.id === selectedId ? attemptsState.list : []
+  const latestAttempt = attempts[attempts.length - 1] || null
+  const aiBusy = latestAttempt ? latestAttempt.status === 'queued' || latestAttempt.status === 'generating' : false
+
+  const loadDraft = useCallback((attempt) => {
+    draftRef.current = attempt.id
+    setDraftId(attempt.id)
+    setPendingDraftId(null)
+    setForm({ html: attempt.code, css: '', js: '' })
+    setMode('single')
+    setDirty(false)
+  }, [])
+
+  // Cuando llega un borrador listo: se carga solo si no pisa nada del profe; si no, queda un boton.
+  useEffect(() => {
+    if (!selected || !aiEnabled || attemptsState.id !== selected.id) return
+    const ready = attemptsState.list.filter((attempt) => attempt.status === 'ready' && attempt.code)
+    if (!ready.length) return
+    if (consideredRef.current.selId !== selected.id) consideredRef.current = { selId: selected.id, attemptId: null }
+
+    // 1) Algo que pidio el profe en esta sesion (generar o rehacer): vale tambien sobre una version ya publicada.
+    for (const attempt of ready) {
+      if (!requestedRef.current.has(attempt.id)) continue
+      const sent = requestedRef.current.get(attempt.id)
+      requestedRef.current.delete(attempt.id)
+      consideredRef.current.attemptId = attempt.id
+      if (!dirtyRef.current || JSON.stringify(formRef.current) === sent) loadDraft(attempt)
+      else setPendingDraftId(attempt.id)
+      return
+    }
+
+    // 2) Version todavia sin publicar: el ultimo borrador se carga al abrirla o cuando llega.
+    if (selected.hasCode) return
+    const latest = ready[ready.length - 1]
+    if (consideredRef.current.attemptId === latest.id) return
+    consideredRef.current.attemptId = latest.id
+    if (!dirtyRef.current) loadDraft(latest)
+    else setPendingDraftId(latest.id)
+  }, [attemptsState, selected, aiEnabled, loadDraft])
+
+  // Por si se pierde un aviso en vivo: mientras la IA trabaja se vuelve a preguntar cada tanto.
+  useEffect(() => {
+    if (!aiBusy || !selectedId) return undefined
+    const timer = setInterval(() => refreshAttempts(selectedId), 5000)
+    return () => clearInterval(timer)
+  }, [aiBusy, selectedId, refreshAttempts])
 
   useEffect(() => {
     if (!project || aiUrlDirty) return
@@ -175,6 +288,10 @@ export default function DashboardProject() {
     setSaving(true)
     try {
       const data = await api.saveIterationCode(selected.id, { ...form, publishedBy: me || 'teacher' })
+      // Lo publicado pasa a ser lo que hay en el editor: ya no es un borrador.
+      draftRef.current = null
+      setDraftId(null)
+      setPendingDraftId(null)
       setDetail(data)
       setDirty(false)
       toast('Enviado al alumno', 'ok')
@@ -183,6 +300,54 @@ export default function DashboardProject() {
     } finally {
       setSaving(false)
     }
+  }
+
+  /** Pide un intento a la IA. Con cambios, parte del codigo que hay en el editor ahora. */
+  async function requestAi(changes) {
+    if (!selected) return
+    const iterationId = selected.id
+    setAiWorking(true)
+    try {
+      const body = { requestedBy: me || 'teacher' }
+      if (changes) {
+        body.feedback = changes
+        body.code = form
+      }
+      const { attempt } = await api.ai.generate(iterationId, body)
+      requestedRef.current.set(attempt.id, JSON.stringify(form))
+      if (changes && changes === feedback) setFeedback('')
+      await refreshAttempts(iterationId)
+    } catch (err) {
+      toast(err.message, 'error')
+      refreshAttempts(iterationId)
+    } finally {
+      setAiWorking(false)
+    }
+  }
+
+  async function cancelAi() {
+    if (!selected) return
+    setAiWorking(true)
+    try {
+      await api.ai.cancel(selected.id)
+      await refreshAttempts(selected.id)
+    } catch (err) {
+      toast(err.message, 'error')
+    } finally {
+      setAiWorking(false)
+    }
+  }
+
+  function chooseAttempt(attempt) {
+    const replacesEdits = dirtyRef.current && pendingDraftId !== attempt.id && draftRef.current !== attempt.id
+    if (replacesEdits && !window.confirm('Esto reemplaza los cambios que hiciste en el editor. Cargar igual?')) return
+    loadDraft(attempt)
+  }
+
+  function addPreviewError() {
+    if (!previewError) return
+    const line = `Hay un error en el juego: ${previewError}`
+    setFeedback((current) => (current.trim() ? `${current.trimEnd()}\n${line}` : line))
   }
 
   async function patch(payload, message) {
@@ -465,6 +630,31 @@ export default function DashboardProject() {
 
         {/* --------------------------------------------- columna derecha */}
         <section className="workspace__col">
+          {aiEnabled && selected ? (
+            <AiCard
+              attempts={attempts}
+              loadedId={draftId}
+              // El ultimo intento ya quedo publicado si la version se guardo despues de que termino.
+              published={Boolean(
+                selected.hasCode && latestAttempt?.finishedAt && selected.updatedAt > latestAttempt.finishedAt
+              )}
+              pendingDraft={attempts.find((attempt) => attempt.id === pendingDraftId) || null}
+              canRedo={Boolean(form.html.trim() || form.js.trim())}
+              feedback={feedback}
+              onFeedback={setFeedback}
+              previewError={previewError}
+              working={aiWorking}
+              saving={saving}
+              onGenerate={() => requestAi('')}
+              onCancel={cancelAi}
+              onRetry={() => requestAi(latestAttempt?.feedback || '')}
+              onRedo={() => requestAi(feedback.trim())}
+              onLoad={chooseAttempt}
+              onApprove={save}
+              onAddError={addPreviewError}
+            />
+          ) : null}
+
           <div className="card">
             <div className="card__head">
               <h3>Respuesta de la IA</h3>
@@ -543,6 +733,8 @@ export default function DashboardProject() {
                 type="button"
                 className="btn btn--ghost"
                 onClick={() => {
+                  draftRef.current = null
+                  setDraftId(null)
                   setDirty(true)
                   setForm(EMPTY_CODE)
                 }}
@@ -554,7 +746,15 @@ export default function DashboardProject() {
               </button>
             </div>
 
-            {dirty ? <p className="note note--warn">Tenes cambios sin guardar.</p> : null}
+            {dirty ? (
+              <p className="note note--warn">Tenes cambios sin guardar.</p>
+            ) : draftId ? (
+              <p className="note">
+                {selected?.hasCode
+                  ? 'Borrador de la IA sin aprobar: el alumno sigue viendo la version publicada.'
+                  : 'Borrador de la IA: todavia no se envio al alumno.'}
+              </p>
+            ) : null}
           </div>
 
           <div className="card">
@@ -563,7 +763,7 @@ export default function DashboardProject() {
               <span className="muted">Asi lo va a ver el alumno</span>
             </div>
             {preview ? (
-              <GameFrame srcDoc={preview} title="Previsualizacion" height={420} />
+              <GameFrame srcDoc={preview} title="Previsualizacion" height={420} onErrorChange={setPreviewError} />
             ) : (
               <EmptyState title="Sin codigo" description="Pega la respuesta de la IA para ver el juego aca." />
             )}
