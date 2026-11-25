@@ -63,3 +63,7 @@ Delivery strategy: single-pr/exception-ok (repo works straight on main). Route: 
 - Production check: redo-size case (v5 of an existing game, 27 KB) took 68 s, 15.4k output tokens, USD 0.185.
 - Deployed 2026-11-25 (commit 80605c6) to aigames.becode.com.ar with the user's OK. Same day the user asked for no daily cap:
   `AI_DAILY_LIMIT=1000000` in Coolify, to be restored to 150 afterwards (code default unchanged).
+- T06 (2026-11-25, user request) student sees queued / generating / waiting approval; context fixes (only applied feedback, marks on
+  requests not yet in the code, no previous code case). 45/45 tests, build ok, browser run ok (no leak of feedback or code, teacher
+  edits survive syncs). Verified on production data that the prompt carries every earlier request plus the full latest code.
+  Branch `feat/estado-alumno`, not pushed.

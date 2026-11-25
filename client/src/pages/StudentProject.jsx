@@ -34,7 +34,7 @@ function AiWaiting({ ai }) {
       <div className="waiting" role="status">
         <span className="waiting__pulse" aria-hidden="true" />
         <div>
-          <strong>¡Tu juego esta en la fila...</strong>
+          <strong>Tu juego esta en la fila...</strong>
           <p>En un ratito la IA lo empieza a armar. No cierres la pagina.</p>
         </div>
       </div>
