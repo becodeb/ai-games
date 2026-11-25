@@ -45,10 +45,15 @@ server through ANTHROPIC_BASE_URL, no real spend), `npm run build`, browser run 
 Delivery strategy: single-pr/exception-ok (repo works straight on main). Route: delegated direct, one writer (2+ files).
 
 ## Tasks
-- [ ] T01 Server: attempts, queue, Anthropic client, endpoints, tests
-- [ ] T02 Client: AI review card in DashboardProject, badges in Dashboard
-- [ ] T03 Config and docs: compose, .env.example, Dockerfile if needed, README
-- [ ] T04 Browser verification with fake Anthropic (parent)
+- [x] T01 Server: attempts, queue, Anthropic client, endpoints, tests
+- [x] T02 Client: AI review card in DashboardProject, badges in Dashboard
+- [x] T03 Config and docs: compose, .env.example, Dockerfile if needed, README
+- [x] T04 Browser verification with fake Anthropic (parent)
 
 ## Evidence
-(pending)
+- T01 `1dd4455`, T02 `e4ad6f2`, T03 `c5dda8d`. `npm test --prefix server`: 38/38. `npm run build`: ok.
+- T04 (2026-11-25, parent, Chromium against the fake Anthropic server): live badges on both teacher screens, draft loaded
+  alone, play 404 and no code for the student before approval, redo with hand edits keeps 1 version, switching attempts,
+  approval reaches the student live, manual paste during generation wins (attempt canceled), manual buttons present, no page errors.
+- Native review: not run, receipt-driven development is off globally. Assessed tier: medium.
+- PENDING: one real generation with a real ANTHROPIC_API_KEY (quality, time and cost not measured). Push and deploy not done.
