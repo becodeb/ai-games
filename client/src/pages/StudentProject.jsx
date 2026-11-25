@@ -9,8 +9,76 @@ import { Badge, EmptyState, PromptBlock, Spinner } from '../components/ui.jsx'
 import { useToast } from '../components/Toast.jsx'
 import { api } from '../lib/api.js'
 import { subscribe } from '../lib/socket.js'
-import { ITERATION_STATUS, PROJECT_STATUS, clockTime, copyToClipboard, statusInfo } from '../lib/format.js'
+import { PROJECT_STATUS, clockTime, copyToClipboard, iterationBadge, statusInfo } from '../lib/format.js'
 import { rememberProject } from '../lib/storage.js'
+
+/** Segundos desde `startedAt`; nunca negativo aunque el reloj del servidor este adelantado. */
+function useElapsed(startedAt, active) {
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    if (!active) return undefined
+    setNow(Date.now())
+    const timer = setInterval(() => setNow(Date.now()), 1000)
+    return () => clearInterval(timer)
+  }, [active])
+  const start = startedAt ? new Date(startedAt).getTime() : NaN
+  return Number.isNaN(start) ? null : Math.max(0, Math.floor((now - start) / 1000))
+}
+
+function AiWaiting({ ai }) {
+  const generating = ai?.phase === 'generating'
+  const seconds = useElapsed(ai?.startedAt, generating)
+
+  if (ai?.phase === 'queued') {
+    return (
+      <div className="waiting" role="status">
+        <span className="waiting__pulse" aria-hidden="true" />
+        <div>
+          <strong>¡Tu juego esta en la fila...</strong>
+          <p>En un ratito la IA lo empieza a armar. No cierres la pagina.</p>
+        </div>
+      </div>
+    )
+  }
+  if (generating) {
+    return (
+      <div className="waiting" role="status">
+        <span className="waiting__pulse" aria-hidden="true" />
+        <div>
+          <strong>
+            {ai.redo ? 'La IA esta haciendo los cambios que pidio el profe...' : 'La IA esta armando tu juego...'}
+            {seconds !== null ? (
+              <span className="waiting__elapsed" aria-hidden="true">
+                {' '}
+                {seconds} s
+              </span>
+            ) : null}
+          </strong>
+          <p>Suele tardar entre medio minuto y un minuto y medio.</p>
+        </div>
+      </div>
+    )
+  }
+  if (ai?.phase === 'review') {
+    return (
+      <div className="waiting waiting--review" role="status">
+        <div>
+          <strong>¡Tu juego ya esta listo! Falta que un profe lo apruebe</strong>
+          <p>Cuando lo apruebe aparece aca solo, sin recargar.</p>
+        </div>
+      </div>
+    )
+  }
+  return (
+    <div className="waiting">
+      <span className="waiting__pulse" aria-hidden="true" />
+      <div>
+        <strong>El profesor esta procesando tu juego...</strong>
+        <p>No cierres la pagina. Cuando este listo aparece aca solo, sin recargar.</p>
+      </div>
+    </div>
+  )
+}
 
 export default function StudentProject() {
   const { id } = useParams()
@@ -169,9 +237,7 @@ export default function StudentProject() {
                     </h3>
                     <div className="card__head-actions">
                       <span className="muted">{clockTime(iteration.createdAt)}</span>
-                      <Badge tone={statusInfo(ITERATION_STATUS, iteration.status).tone}>
-                        {statusInfo(ITERATION_STATUS, iteration.status).label}
-                      </Badge>
+                      <Badge tone={iterationBadge(iteration).tone}>{iterationBadge(iteration).label}</Badge>
                     </div>
                   </div>
 
@@ -211,13 +277,7 @@ export default function StudentProject() {
                     onErrorChange={trackError(iteration.id)}
                   />
                 ) : iteration.status === 'pending' ? (
-                  <div className="waiting">
-                    <span className="waiting__pulse" aria-hidden="true" />
-                    <div>
-                      <strong>El profesor esta procesando tu juego...</strong>
-                      <p>No cierres la pagina. Cuando este listo aparece aca solo, sin recargar.</p>
-                    </div>
-                  </div>
+                  <AiWaiting ai={iteration.ai} />
                 ) : null}
 
                 {!iteration.hasCode && dropOpen ? (

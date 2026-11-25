@@ -2,7 +2,7 @@ import { fake, ready } from './env.js'
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { db } from '../src/db.js'
-import { createProject } from '../src/lib/store.js'
+import { createProject, getProjectDetail } from '../src/lib/store.js'
 import { createAiQueue } from '../src/lib/ai/queue.js'
 import { getAttemptRow, listAttempts, createAttempt } from '../src/lib/ai/attempts.js'
 import { readConfig } from '../src/lib/ai/config.js'
@@ -28,6 +28,21 @@ function controllable() {
 }
 
 const cfg = (extra = {}) => () => ({ ...readConfig(), ...extra })
+
+describe('estado de la IA para el alumno', () => {
+  const pendingIteration = () =>
+    createProject({ title: 'P', promptReadable: 'pedido', promptFull: 'pedido', send: true }).iterations[0]
+  const aiOf = (iteration) => getProjectDetail(iteration.projectId).iterations[0].ai
+
+  it('en cola es queued; si el intento falla y no hay uno listo, null', () => {
+    const it0 = pendingIteration()
+    assert.equal(aiOf(it0), null)
+    const attempt = createAttempt({ iterationId: it0.id, feedback: 'cambio privado' })
+    assert.deepEqual(aiOf(it0), { phase: 'queued', startedAt: null, redo: true })
+    db.prepare("UPDATE ai_attempts SET status = 'error', error = 'boom' WHERE id = ?").run(attempt.id)
+    assert.equal(aiOf(it0), null)
+  })
+})
 
 describe('cola', () => {
   it('respeta AI_MAX_CONCURRENCY y atiende en orden de llegada (FIFO)', async () => {

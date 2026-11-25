@@ -199,6 +199,46 @@ describe('generacion automatica', () => {
     }
   })
 
+  it('el alumno ve la fase de la IA sin filtrar codigo, cambios ni errores', async () => {
+    const aiOf = async (projectId) => (await srv.get(`/projects/${projectId}`)).json.iterations[0].ai
+    fake.delayMs = 400
+    try {
+      const { projectId, iterationId } = await newProject(true)
+      await waitStatus(iterationId, 1, 'generating')
+      const generating = await aiOf(projectId)
+      assert.equal(generating.phase, 'generating')
+      assert.ok(generating.startedAt)
+      assert.equal(generating.redo, undefined)
+      await waitStatus(iterationId, 1, 'ready')
+      assert.deepEqual(Object.keys(await aiOf(projectId)).sort(), ['phase', 'startedAt'])
+      assert.equal((await aiOf(projectId)).phase, 'review')
+
+      // Rehacer: la fase vuelve a "generating" con redo, y nada del pedido ni del codigo sale en el JSON.
+      const redo = await srv.post(`/iterations/${iterationId}/ai`, {
+        feedback: 'SECRETO-DEL-PROFE',
+        code: { html: FULL_DOC('CODIGO-SECRETO'), css: '', js: '' }
+      })
+      assert.equal(redo.status, 202)
+      await waitStatus(iterationId, 2, 'generating')
+      const during = await srv.get(`/projects/${projectId}`)
+      assert.equal(during.json.iterations[0].ai.phase, 'generating')
+      assert.equal(during.json.iterations[0].ai.redo, true)
+      assert.doesNotMatch(during.text, /SECRETO-DEL-PROFE|CODIGO-SECRETO|Juego falso|"error"|tokens|"seq"|base_code/i)
+      await waitStatus(iterationId, 2, 'ready')
+
+      // Cancelar un intento nuevo con uno listo antes: sigue en revision.
+      await srv.post(`/iterations/${iterationId}/ai`)
+      await waitStatus(iterationId, 3, 'generating')
+      await srv.post(`/iterations/${iterationId}/ai/cancel`)
+      assert.equal((await aiOf(projectId)).phase, 'review')
+
+      await srv.put(`/iterations/${iterationId}/code`, { html: FULL_DOC('APROBADO'), css: '', js: '' })
+      assert.equal(await aiOf(projectId), null)
+    } finally {
+      fake.delayMs = 0
+    }
+  })
+
   it('GET /ai/status expone enabled, auto y model sin la clave', async () => {
     const res = await srv.get('/ai/status')
     assert.deepEqual(res.json, { enabled: true, auto: true, model: 'claude-sonnet-5-5' })

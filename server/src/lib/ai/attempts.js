@@ -23,6 +23,12 @@ const st = {
   previousFeedback: db.prepare(
     "SELECT feedback FROM ai_attempts WHERE iteration_id = ? AND seq < ? AND feedback <> '' ORDER BY seq ASC"
   ),
+  // Sin columnas de codigo, de error ni de texto: solo lo que ve el alumno.
+  projectStates: db.prepare(`
+    SELECT a.iteration_id, a.status, a.started_at, (a.feedback <> '') AS has_feedback
+    FROM ai_attempts a JOIN iterations i ON i.id = a.iteration_id
+    WHERE i.project_id = ? ORDER BY a.seq ASC
+  `),
   nextQueued: db.prepare("SELECT id FROM ai_attempts WHERE status = 'queued' ORDER BY created_at ASC, rowid ASC LIMIT 1"),
   claim: db.prepare(
     "UPDATE ai_attempts SET status = 'generating', started_at = ?, tries = tries + 1 WHERE id = ? AND status = 'queued'"
@@ -79,6 +85,15 @@ export const listAttempts = (iterationId) => st.list.all(iterationId).map(mapAtt
 export const activeAttempt = (iterationId) => st.active.get(iterationId) || null
 export const latestAttemptStatus = (iterationId) => st.latestStatus.get(iterationId)?.status ?? null
 export const previousFeedback = (iterationId, seq) => st.previousFeedback.all(iterationId, seq).map((r) => r.feedback)
+/** Estado de la IA por iteracion de un proyecto (iterationId -> filas en orden), sin codigo ni textos. */
+export function attemptStatesByIteration(projectId) {
+  const map = new Map()
+  for (const row of st.projectStates.all(projectId)) {
+    if (!map.has(row.iteration_id)) map.set(row.iteration_id, [])
+    map.get(row.iteration_id).push({ status: row.status, startedAt: row.started_at, redo: Boolean(row.has_feedback) })
+  }
+  return map
+}
 export const projectOfIteration = (iterationId) => st.iterationProject.get(iterationId)?.project_id ?? null
 
 export function countSince(isoDate) {

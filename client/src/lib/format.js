@@ -11,6 +11,14 @@ export const ITERATION_STATUS = {
   delivered: { label: 'Juego listo', tone: 'ok' }
 }
 
+/** Insignia de una version pendiente segun la fase de la IA (`iteration.ai`); sin fase cae al estado normal. */
+export function iterationBadge(iteration) {
+  const phase = iteration.status === 'pending' ? iteration.ai?.phase : null
+  if (phase === 'queued' || phase === 'generating') return { label: 'La IA lo esta armando', tone: 'info' }
+  if (phase === 'review') return { label: 'Esperando aprobacion', tone: 'warn' }
+  return statusInfo(ITERATION_STATUS, iteration.status)
+}
+
 /** Mismo ciclo que las iteraciones de juego, pero lo que llega son imagenes. */
 export const IMAGE_REQUEST_STATUS = {
   copied: { label: 'Prompt copiado', tone: 'neutral' },

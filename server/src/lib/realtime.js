@@ -83,6 +83,9 @@ export function broadcastAi(iterationId) {
   if (!projectId) return
   io.to(rooms.teachers).emit('ai:changed', { projectId, iterationId, status: latestAttemptStatus(iterationId) })
   io.to(rooms.dashboard).emit('dashboard:sync', listDashboard())
+  // El alumno ve la fase de la IA (en cola / armando / lista para revisar).
+  const detail = getProjectDetail(projectId)
+  if (detail) io.to(rooms.project(projectId)).emit('project:sync', detail)
 }
 
 /** Solo la galeria (p. ej. cuando termina de generarse una miniatura). */

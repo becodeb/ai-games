@@ -1,7 +1,7 @@
 import { db, newId, now } from '../db.js'
 import { buildGameDocument, hasPlayableCode } from './game-code.js'
 import { thumbnailVersion } from './thumbnails.js'
-import { latestAttemptStatus } from './ai/attempts.js'
+import { attemptStatesByIteration, latestAttemptStatus } from './ai/attempts.js'
 
 /** Estados de proyecto: draft | pending | processing | completed */
 /** Estados de iteracion: copied | pending | delivered */
@@ -97,11 +97,29 @@ export function getIterationRow(id) {
   return statements.getIteration.get(id)
 }
 
-/** Proyecto + todas sus iteraciones, con el codigo de cada version. */
+/**
+ * Lo que el alumno puede saber de la IA en una version pendiente: fase, desde cuando y si es un rehacer.
+ * Nunca codigo, textos de cambios, errores, tokens ni ids de intentos.
+ */
+function aiInfo(iteration, attempts = []) {
+  if (iteration.status !== 'pending' || iteration.hasCode || !attempts.length) return null
+  const last = attempts[attempts.length - 1]
+  if (last.status === 'queued') return { phase: 'queued', startedAt: null, ...(last.redo ? { redo: true } : {}) }
+  if (last.status === 'generating') return { phase: 'generating', startedAt: last.startedAt, ...(last.redo ? { redo: true } : {}) }
+  if (attempts.some((a) => a.status === 'ready')) return { phase: 'review', startedAt: null }
+  return null
+}
+
+/** Proyecto + todas sus iteraciones, con el codigo de cada version y el estado de la IA (`ai`). */
 export function getProjectDetail(id) {
   const project = getProject(id)
   if (!project) return null
-  const iterations = statements.listIterations.all(id).map((row) => mapIteration(row))
+  const states = attemptStatesByIteration(id)
+  const iterations = statements.listIterations.all(id).map((row) => {
+    const iteration = mapIteration(row)
+    iteration.ai = aiInfo(iteration, states.get(iteration.id))
+    return iteration
+  })
   return { project, iterations }
 }
 

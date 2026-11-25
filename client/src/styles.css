@@ -842,6 +842,21 @@ main.container--wide {
   color: var(--text-muted);
 }
 
+.waiting--review {
+  border-color: var(--ok-border);
+  background: var(--ok-bg);
+  color: var(--ok);
+}
+
+.waiting--review p {
+  color: color-mix(in srgb, var(--ok) 78%, var(--text));
+}
+
+.waiting__elapsed {
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+}
+
 .waiting__pulse {
   width: 10px;
   height: 10px;
