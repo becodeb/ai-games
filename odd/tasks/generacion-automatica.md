@@ -60,4 +60,6 @@ Delivery strategy: single-pr/exception-ok (repo works straight on main). Route: 
 - T05 (2026-11-25) model chosen by measurement, 2 real games each: Sonnet 5.5 low 25-41 s / USD 0.05-0.07; medium 42-48 s;
   low without thinking 47-55 s; Haiku 5.5 low 41-75 s; Haiku without thinking 18-21 s / USD 0.003 but plainer games.
   Through the real server: first generation 23 s, redo 22 s, 1 version. Tests 39/39. Total spend about USD 0.61.
-- PENDING: push, `ANTHROPIC_API_KEY` in Coolify, deploy.
+- Production check: redo-size case (v5 of an existing game, 27 KB) took 68 s, 15.4k output tokens, USD 0.185.
+- Deployed 2026-11-25 (commit 80605c6) to aigames.becode.com.ar with the user's OK. Same day the user asked for no daily cap:
+  `AI_DAILY_LIMIT=1000000` in Coolify, to be restored to 150 afterwards (code default unchanged).
