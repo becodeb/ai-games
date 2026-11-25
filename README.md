@@ -151,6 +151,52 @@ Detalles que conviene saber:
   y los archivos viejos se borran del disco. Las otras versiones no se tocan.
 - El alumno tambien puede cerrar el ciclo solo: **"Ya tengo las imagenes de la IA"** le deja subir la tanda.
 
+## Generacion automatica con IA
+
+Opcional. Cuando un alumno **envia** su pedido a los profes, el servidor puede generar el juego con la API de
+Anthropic y dejarlo como **borrador** en el panel del profe. El profe solo revisa: lo aprueba, o escribe los
+cambios que quiere y la IA lo rehace, las veces que haga falta, **sin crear versiones nuevas** del alumno.
+
+- **Se activa con `ANTHROPIC_API_KEY`.** Sin clave la tarjeta "Juego hecho por la IA" no aparece y todo
+  funciona como antes (copiar prompt, pegar el codigo, aprobar).
+- El borrador es privado: no aparece en la pantalla del alumno, ni en la galeria, ni en `/jugar` hasta que el
+  profe aprueba con **Aprobar y enviar al alumno** (el mismo camino de siempre).
+- **Rehacer** parte del codigo que el profe tiene en el editor (con sus ajustes a mano), el pedido original y
+  los cambios pedidos antes. Se puede **cancelar** una generacion en curso y **reintentar** si fallo. Publicar
+  a mano mientras la IA trabaja cancela ese intento y descarta su resultado.
+- Los intentos viven en la tabla `ai_attempts` (varios por version). Si el servidor se reinicia, los que
+  estaban en cola o generando se retoman (maximo 2 intentos antes de marcarlos con error).
+- Si el `<script>` del juego tiene un error de sintaxis, el borrador igual se guarda con un aviso para pedir
+  que lo rehaga.
+- Los juegos que ya estaban pendientes al activar la funcion **no** se generan solos: tienen el boton
+  **Generar con IA**.
+
+Variables (todas opcionales salvo la clave; un valor invalido vuelve al por defecto):
+
+| Variable | Por defecto | Que hace |
+| --- | --- | --- |
+| `ANTHROPIC_API_KEY` | vacia | Activa la funcion. Nunca llega al navegador. |
+| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Modelo a usar. |
+| `AI_EFFORT` | `medium` | Esfuerzo de razonamiento: `low`, `medium`, `high`, `xhigh`, `max`. |
+| `AI_AUTO` | `true` | `false` apaga la generacion al enviar; queda solo el boton manual. |
+| `AI_MAX_CONCURRENCY` | `3` | Generaciones en paralelo; el resto espera en cola. |
+| `AI_DAILY_LIMIT` | `150` | Tope en las ultimas 24 h. Al llegar, lo automatico deja un aviso en el panel y el boton responde 429. |
+
+La app no tiene login, asi que estos topes (mas un solo intento activo por version y limites de largo en el
+pedido y en los cambios) son la proteccion del gasto. Cada generacion larga con un modelo grande cuesta
+dinero real: ajusta `AI_DAILY_LIMIT` a tu presupuesto.
+
+En desarrollo, `npm run dev` lee un archivo `.env` (en la raiz o en `server/`) si existe; hace falta Node 22.9 o
+mas. Ponele ahi solo las variables de IA: el resto de `.env.example` es para produccion (`DATABASE_PATH=/data/...`). En produccion las variables llegan por `docker-compose.yml` (Coolify las toma de su panel).
+
+### Probar sin gastar
+
+```bash
+node server/test/fake-anthropic.js 4010        # falso de la API: devuelve un juego chico tras ~3 s
+ANTHROPIC_BASE_URL=http://127.0.0.1:4010 ANTHROPIC_API_KEY=cualquiera npm run dev:server
+npm test --prefix server                       # tests con node:test contra ese mismo falso
+```
+
 ## Notas tecnicas
 
 - **Miniaturas de la galeria:** el servidor abre cada juego en un Chromium headless con ventana de 1280x800
