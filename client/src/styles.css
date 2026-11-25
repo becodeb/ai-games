@@ -1167,7 +1167,7 @@ main.container--wide {
   cursor: pointer;
 }
 
-.version-chip:hover {
+.version-chip:not(.version-chip--active):hover {
   background: var(--surface-hover);
 }
 

@@ -390,6 +390,20 @@ export default function DashboardProject() {
   const isFullDoc = looksLikeFullDocument(form.html)
   const takenByOther = project.teacherName && project.teacherName !== me
 
+  const previewCard = (
+    <div className="card">
+      <div className="card__head">
+        <h3>Previsualizacion</h3>
+        <span className="muted">Asi lo va a ver el alumno</span>
+      </div>
+      {preview ? (
+        <GameFrame srcDoc={preview} title="Previsualizacion" height={420} onErrorChange={setPreviewError} />
+      ) : (
+        <EmptyState title="Sin codigo" description="Pega la respuesta de la IA para ver el juego aca." />
+      )}
+    </div>
+  )
+
   return (
     <Layout
       brandTo="/dashboard"
@@ -655,6 +669,9 @@ export default function DashboardProject() {
             />
           ) : null}
 
+          {/* Con IA lo primero es mirar el juego: la vista previa va arriba del codigo. */}
+          {aiEnabled ? previewCard : null}
+
           <div className="card">
             <div className="card__head">
               <h3>Respuesta de la IA</h3>
@@ -757,17 +774,7 @@ export default function DashboardProject() {
             ) : null}
           </div>
 
-          <div className="card">
-            <div className="card__head">
-              <h3>Previsualizacion</h3>
-              <span className="muted">Asi lo va a ver el alumno</span>
-            </div>
-            {preview ? (
-              <GameFrame srcDoc={preview} title="Previsualizacion" height={420} onErrorChange={setPreviewError} />
-            ) : (
-              <EmptyState title="Sin codigo" description="Pega la respuesta de la IA para ver el juego aca." />
-            )}
-          </div>
+          {aiEnabled ? null : previewCard}
         </section>
       </div>
 
