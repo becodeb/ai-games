@@ -78,9 +78,22 @@ export function joinCode({ html = '', css = '', js = '' } = {}) {
 export function buildUserMessage({ iteration, earlier = [], previousCode = null, baseCode = '', previousFeedback = [], feedback = '' }) {
   const parts = []
 
+  const hasBase = Boolean(String(baseCode).trim())
   if (earlier.length) {
-    parts.push('Pedidos anteriores del alumno sobre este mismo juego, en orden:')
-    earlier.forEach((it, index) => parts.push(block('pedido', requestText(it), ` numero="${index + 1}" version="${it.version}"`)))
+    // Con codigo base (redo) todo lo anterior ya esta en ese codigo; si no, depende de la version del codigo previo.
+    const included = (it) => hasBase || (previousCode ? it.version <= previousCode.version : false)
+    parts.push(
+      'Pedidos anteriores del alumno sobre este mismo juego, en orden. Cada uno indica si ya está aplicado en el código que se te da o si todavía no (en ese caso es solo contexto: el código no lo incluye):'
+    )
+    earlier.forEach((it, index) => {
+      const estado = included(it) ? 'ya incluido en el código' : 'todavía NO incluido en el código'
+      parts.push(block('pedido', requestText(it), ` numero="${index + 1}" version="${it.version}" estado="${estado}"`))
+    })
+    if (!previousCode && !hasBase) {
+      parts.push(
+        'No hay código previo de ninguna versión: armá el juego completo desde cero, cumpliendo todos los pedidos anteriores y el pedido nuevo.'
+      )
+    }
   }
   if (previousCode) {
     parts.push(
@@ -104,7 +117,7 @@ export function buildUserMessage({ iteration, earlier = [], previousCode = null,
     }
     if (previousFeedback.length) {
       parts.push(
-        'Cambios que el profe ya pidió antes sobre esta versión, en orden:',
+        'Historial de cambios que el profe pidió antes sobre esta versión y que se aplicaron en su momento. Es solo historial: el código actual es la autoridad. Si algo de esto no aparece en el código actual, es porque el profe lo descartó (quizás volvió a un intento anterior): no lo vuelvas a agregar.',
         ...previousFeedback.map((text, index) => block('cambio', clip(text, FEEDBACK_CAP), ` numero="${index + 1}"`))
       )
     }

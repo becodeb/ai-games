@@ -20,8 +20,9 @@ const st = {
   active: db.prepare("SELECT * FROM ai_attempts WHERE iteration_id = ? AND status IN ('queued', 'generating') LIMIT 1"),
   // Sin columnas de codigo: el dashboard la pide por cada proyecto.
   latestStatus: db.prepare('SELECT status FROM ai_attempts WHERE iteration_id = ? ORDER BY seq DESC LIMIT 1'),
+  // Solo intentos 'ready': los fallidos o cancelados nunca se aplicaron al codigo.
   previousFeedback: db.prepare(
-    "SELECT feedback FROM ai_attempts WHERE iteration_id = ? AND seq < ? AND feedback <> '' ORDER BY seq ASC"
+    "SELECT feedback FROM ai_attempts WHERE iteration_id = ? AND seq < ? AND feedback <> '' AND status = 'ready' ORDER BY seq ASC"
   ),
   // Sin columnas de codigo, de error ni de texto: solo lo que ve el alumno.
   projectStates: db.prepare(`

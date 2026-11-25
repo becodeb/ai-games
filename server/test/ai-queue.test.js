@@ -2,8 +2,8 @@ import { fake, ready } from './env.js'
 import { after, before, describe, it } from 'node:test'
 import assert from 'node:assert/strict'
 import { db } from '../src/db.js'
-import { createProject, getProjectDetail } from '../src/lib/store.js'
-import { createAiQueue } from '../src/lib/ai/queue.js'
+import { addIteration, createProject, getProjectDetail, saveIterationCode } from '../src/lib/store.js'
+import { buildPrompt, createAiQueue } from '../src/lib/ai/queue.js'
 import { getAttemptRow, listAttempts, createAttempt } from '../src/lib/ai/attempts.js'
 import { readConfig } from '../src/lib/ai/config.js'
 import { GenerationError } from '../src/lib/ai/client.js'
@@ -41,6 +41,58 @@ describe('estado de la IA para el alumno', () => {
     assert.deepEqual(aiOf(it0), { phase: 'queued', startedAt: null, redo: true })
     db.prepare("UPDATE ai_attempts SET status = 'error', error = 'boom' WHERE id = ?").run(attempt.id)
     assert.equal(aiOf(it0), null)
+  })
+})
+
+describe('contexto del prompt', () => {
+  // Los intentos de estos tests no deben quedar en cola para las otras suites.
+  after(() => db.prepare("UPDATE ai_attempts SET status = 'canceled' WHERE status IN ('queued', 'generating')").run())
+
+  const html = (m) => `<!DOCTYPE html><html><body>${m}</body></html>`
+  const project = () => createProject({ title: 'P', promptReadable: 'pedido-uno', promptFull: 'x', send: false })
+
+  it('los cambios previos son solo los de intentos listos y se explican como historial', () => {
+    const id = project().iterations[0].id
+    const mk = (feedback, status) => {
+      const row = createAttempt({ iterationId: id, feedback })
+      db.prepare('UPDATE ai_attempts SET status = ? WHERE id = ?').run(status, row.id)
+    }
+    mk('cambio-aplicado', 'ready')
+    mk('cambio-fallido', 'error')
+    mk('cambio-cancelado', 'canceled')
+    const current = createAttempt({ iterationId: id, feedback: 'cambio-actual' })
+    const { user } = buildPrompt(current)
+    assert.match(user, /cambio-aplicado/)
+    assert.doesNotMatch(user, /cambio-fallido|cambio-cancelado/)
+    assert.match(user, /solo historial/)
+    assert.match(user, /no lo vuelvas a agregar/)
+  })
+
+  it('marca los pedidos que el codigo previo todavia no incluye', () => {
+    const detail = project()
+    saveIterationCode(detail.iterations[0].id, { html: html('V1'), css: '', js: '' })
+    addIteration(detail.project.id, { promptReadable: 'pedido-dos', promptFull: 'x', send: false })
+    const v3 = addIteration(detail.project.id, { promptReadable: 'pedido-tres', promptFull: 'x', send: true }).iterations[2]
+    const { user } = buildPrompt(createAttempt({ iterationId: v3.id }))
+    assert.match(user, /version="1" estado="ya incluido en el código">\npedido-uno/)
+    assert.match(user, /version="2" estado="todavía NO incluido en el código">\npedido-dos/)
+    assert.doesNotMatch(user, /desde cero/)
+  })
+
+  it('una mejora sin codigo previo pide armar todo desde cero', () => {
+    const detail = project()
+    const v2 = addIteration(detail.project.id, { promptReadable: 'pedido-dos', promptFull: 'x', send: true }).iterations[1]
+    const { user } = buildPrompt(createAttempt({ iterationId: v2.id }))
+    assert.match(user, /No hay código previo de ninguna versión: armá el juego completo desde cero/)
+    assert.match(user, /estado="todavía NO incluido en el código">\npedido-uno/)
+  })
+
+  it('un rehacer con codigo base parte de ese codigo y no pide desde cero', () => {
+    const detail = project()
+    const v2 = addIteration(detail.project.id, { promptReadable: 'pedido-dos', promptFull: 'x', send: true }).iterations[1]
+    const { user } = buildPrompt(createAttempt({ iterationId: v2.id, feedback: 'ajuste', baseCode: html('BASE') }))
+    assert.match(user, /<codigo_actual>\n[\s\S]*BASE/)
+    assert.doesNotMatch(user, /desde cero/)
   })
 })
 
