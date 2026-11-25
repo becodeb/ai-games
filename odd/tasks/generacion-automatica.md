@@ -23,11 +23,11 @@ Today a teacher copies each prompt to an external AI chat and pastes the answer 
   409 if one is already queued/generating; 429 daily limit; 503 no key); `POST /iterations/:id/ai/cancel`.
 - Realtime: `ai:changed` {projectId, iterationId, status} without code, to a teacher-only room; dashboard list carries `aiStatus`.
 - Manual publish (`PUT code`) while queued/generating cancels that attempt (abort the request); a late result is discarded.
-- Cost guards (no login in this app): env `AI_MAX_CONCURRENCY=3`, `AI_DAILY_LIMIT=150` (rolling 24h), prompt cap 20k chars,
+- Cost guards (no login in this app): env `AI_MAX_CONCURRENCY=10`, `AI_DAILY_LIMIT=150` (rolling 24h), prompt cap 20k chars,
   feedback cap 4k, one active attempt per iteration, `AI_AUTO=true` switch. Without `ANTHROPIC_API_KEY` the feature is
   hidden and the app behaves exactly as before.
 - Restart: queued/generating attempts are requeued, max 2 tries, then `error`.
-- Model: env `ANTHROPIC_MODEL`, default `claude-opus-5-5`; `AI_EFFORT` default `medium`; streaming, max_tokens 64000,
+- Model: env `ANTHROPIC_MODEL`, default `claude-sonnet-5-5`; `AI_EFFORT` default `low` (user: waiting must be short); streaming, max_tokens 64000,
   `fallbacks: "default"` with beta `server-side-fallback-2026-07-01`.
 
 ## Out of scope
@@ -48,6 +48,7 @@ Delivery strategy: single-pr/exception-ok (repo works straight on main). Route: 
 - [x] T01 Server: attempts, queue, Anthropic client, endpoints, tests
 - [x] T02 Client: AI review card in DashboardProject, badges in Dashboard
 - [x] T03 Config and docs: compose, .env.example, Dockerfile if needed, README
+- [x] T05 Fast model by default (Sonnet 5.5 low), concurrency 10
 - [x] T04 Browser verification with fake Anthropic (parent)
 
 ## Evidence
@@ -56,4 +57,7 @@ Delivery strategy: single-pr/exception-ok (repo works straight on main). Route: 
   alone, play 404 and no code for the student before approval, redo with hand edits keeps 1 version, switching attempts,
   approval reaches the student live, manual paste during generation wins (attempt canceled), manual buttons present, no page errors.
 - Native review: not run, receipt-driven development is off globally. Assessed tier: medium.
-- PENDING: one real generation with a real ANTHROPIC_API_KEY (quality, time and cost not measured). Push and deploy not done.
+- T05 (2026-11-25) model chosen by measurement, 2 real games each: Sonnet 5.5 low 25-41 s / USD 0.05-0.07; medium 42-48 s;
+  low without thinking 47-55 s; Haiku 5.5 low 41-75 s; Haiku without thinking 18-21 s / USD 0.003 but plainer games.
+  Through the real server: first generation 23 s, redo 22 s, 1 version. Tests 39/39. Total spend about USD 0.61.
+- PENDING: push, `ANTHROPIC_API_KEY` in Coolify, deploy.

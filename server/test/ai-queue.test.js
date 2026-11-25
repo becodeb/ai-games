@@ -176,10 +176,17 @@ describe('configuracion', () => {
       AI_AUTO: 'quizas',
       ANTHROPIC_MODEL: '  '
     })
-    assert.deepEqual(config, { enabled: true, auto: true, model: 'claude-opus-5-5', effort: 'medium', maxConcurrency: 3, dailyLimit: 150 })
-    assert.equal(readConfig({ AI_MAX_CONCURRENCY: '0' }).maxConcurrency, 3)
+    assert.deepEqual(config, { enabled: true, auto: true, model: 'claude-sonnet-5-5', effort: 'low', maxConcurrency: 10, dailyLimit: 150 })
+    assert.equal(readConfig({ AI_MAX_CONCURRENCY: '0' }).maxConcurrency, 10)
     assert.equal(readConfig({ AI_MAX_CONCURRENCY: '5', AI_EFFORT: 'HIGH', AI_AUTO: 'off' }).maxConcurrency, 5)
     assert.equal(readConfig({ AI_EFFORT: 'HIGH' }).effort, 'high')
+  })
+
+  it('las opciones dependen del modelo: Haiku sin razonar ni respaldo', async () => {
+    const { modelOptions } = await import('../src/lib/ai/client.js')
+    assert.deepEqual(modelOptions('claude-haiku-5-5', 'low'), { thinking: { type: 'disabled' } })
+    assert.deepEqual(modelOptions('claude-haiku-5-5', 'max'), { thinking: { type: 'adaptive' } })
+    assert.equal(modelOptions('claude-sonnet-5-5', 'low').fallbacks, 'default')
     assert.equal(readConfig({ AI_AUTO: 'off' }).auto, false)
     assert.equal(readConfig({}).enabled, false)
   })

@@ -16,7 +16,7 @@ after(async () => {
 })
 
 it('sin clave la app se comporta como antes: no genera, 503 en los endpoints de IA', async () => {
-  assert.deepEqual((await srv.get('/ai/status')).json, { enabled: false, auto: true, model: 'claude-opus-5-5' })
+  assert.deepEqual((await srv.get('/ai/status')).json, { enabled: false, auto: true, model: 'claude-sonnet-5-5' })
 
   const created = await srv.post('/projects', { title: 'T', promptReadable: 'x', promptFull: 'x', send: true })
   assert.equal(created.status, 201)

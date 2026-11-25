@@ -43,11 +43,11 @@ describe('generacion automatica', () => {
     assert.match(url, /^\/v1\/messages/)
     assert.equal(headers.authorization, 'Bearer test-key-123')
     assert.match(headers['anthropic-beta'], /server-side-fallback-2026-07-01/)
-    assert.equal(body.model, 'claude-opus-5-5')
+    assert.equal(body.model, 'claude-sonnet-5-5')
     assert.equal(body.max_tokens, 64000)
     assert.equal(body.stream, true)
     assert.deepEqual(body.thinking, { type: 'adaptive' })
-    assert.deepEqual(body.output_config, { effort: 'medium' })
+    assert.deepEqual(body.output_config, { effort: 'low' })
     assert.equal(body.fallbacks, 'default')
     for (const banned of ['temperature', 'top_p', 'top_k', 'tool_choice']) assert.equal(body[banned], undefined)
     assert.match(body.system, /taller escolar/)
@@ -201,7 +201,7 @@ describe('generacion automatica', () => {
 
   it('GET /ai/status expone enabled, auto y model sin la clave', async () => {
     const res = await srv.get('/ai/status')
-    assert.deepEqual(res.json, { enabled: true, auto: true, model: 'claude-opus-5-5' })
+    assert.deepEqual(res.json, { enabled: true, auto: true, model: 'claude-sonnet-5-5' })
     assert.doesNotMatch(res.text, /test-key/)
   })
 })

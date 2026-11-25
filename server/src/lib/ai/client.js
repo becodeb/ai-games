@@ -55,6 +55,18 @@ export function translateError(error, signal) {
 }
 
 /**
+ * Lo que cambia segun el modelo. Haiku va sin razonar (pensando tarda mas que Sonnet) y no acepta
+ * el respaldo automatico ante un rechazo; el resto piensa lo justo segun AI_EFFORT.
+ */
+export function modelOptions(model, effort) {
+  if (/haiku/.test(model)) {
+    // disabled solo se acepta hasta high.
+    return { thinking: { type: ['xhigh', 'max'].includes(effort) ? 'adaptive' : 'disabled' } }
+  }
+  return { thinking: { type: 'adaptive' }, betas: ['server-side-fallback-2026-07-01'], fallbacks: 'default' }
+}
+
+/**
  * @param {{system: string, user: string, signal?: AbortSignal}} input
  * @returns {Promise<{text: string, model: string, inputTokens: number, outputTokens: number}>}
  */
@@ -67,10 +79,8 @@ export async function generateGame({ system, user, signal }) {
       {
         model: config.model,
         max_tokens: MAX_TOKENS,
-        thinking: { type: 'adaptive' },
         output_config: { effort: config.effort },
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
+        ...modelOptions(config.model, config.effort),
         system,
         messages: [{ role: 'user', content: user }]
       },

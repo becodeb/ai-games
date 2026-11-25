@@ -5,7 +5,7 @@
 
 const EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max']
 
-export const DEFAULT_MODEL = 'claude-opus-5-5'
+export const DEFAULT_MODEL = 'claude-sonnet-5-5'
 export const MAX_TOKENS = 64000
 export const MAX_TRIES = 2
 export const PROMPT_CAP = 20_000
@@ -32,8 +32,8 @@ export function readConfig(env = process.env) {
     enabled: Boolean(String(env.ANTHROPIC_API_KEY ?? '').trim()),
     auto: bool(env.AI_AUTO, true),
     model: String(env.ANTHROPIC_MODEL ?? '').trim() || DEFAULT_MODEL,
-    effort: EFFORTS.includes(effort) ? effort : 'medium',
-    maxConcurrency: positiveInt(env.AI_MAX_CONCURRENCY, 3),
+    effort: EFFORTS.includes(effort) ? effort : 'low',
+    maxConcurrency: positiveInt(env.AI_MAX_CONCURRENCY, 10),
     dailyLimit: positiveInt(env.AI_DAILY_LIMIT, 150)
   }
 }

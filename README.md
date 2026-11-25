@@ -176,10 +176,10 @@ Variables (todas opcionales salvo la clave; un valor invalido vuelve al por defe
 | Variable | Por defecto | Que hace |
 | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | vacia | Activa la funcion. Nunca llega al navegador. |
-| `ANTHROPIC_MODEL` | `claude-opus-5-5` | Modelo a usar. |
-| `AI_EFFORT` | `medium` | Esfuerzo de razonamiento: `low`, `medium`, `high`, `xhigh`, `max`. |
+| `ANTHROPIC_MODEL` | `claude-sonnet-5-5` | Modelo a usar. |
+| `AI_EFFORT` | `low` | Esfuerzo de razonamiento: `low`, `medium`, `high`, `xhigh`, `max`. |
 | `AI_AUTO` | `true` | `false` apaga la generacion al enviar; queda solo el boton manual. |
-| `AI_MAX_CONCURRENCY` | `3` | Generaciones en paralelo; el resto espera en cola. |
+| `AI_MAX_CONCURRENCY` | `10` | Generaciones en paralelo; el resto espera en cola. |
 | `AI_DAILY_LIMIT` | `150` | Tope en las ultimas 24 h. Al llegar, lo automatico deja un aviso en el panel y el boton responde 429. |
 
 La app no tiene login, asi que estos topes (mas un solo intento activo por version y limites de largo en el

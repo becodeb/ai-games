@@ -105,7 +105,7 @@ export function createFakeAnthropic({ delayMs = 0, mode = 'game' } = {}) {
             id: `msg_fake_${counter}`,
             type: 'message',
             role: 'assistant',
-            model: body.model || 'claude-opus-5-5',
+            model: body.model || 'claude-sonnet-5-5',
             content: [],
             stop_reason: null,
             stop_sequence: null,
